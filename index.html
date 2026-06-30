@@ -79,8 +79,8 @@ font-weight:bold;
 .subinfo{
 margin-top:10px;
 font-size:14px;
-line-height:1.6;
 opacity:.95;
+line-height:1.6;
 }
 
 .grid{
@@ -113,23 +113,23 @@ font-size:15px;
 
 <div class="card">
 
-<h1>OTA Calculator</h1>
-<div class="sub">Traveloka & My Horison (Correct Version)</div>
+<h1>Margin Voucher</h1>
+<div class="sub">Offline Calculator</div>
 
-<label>Jenis OTA</label>
+<label>Jenis Voucher</label>
 <select id="jenis">
 <option value="traveloka">Traveloka</option>
 <option value="my">My Horison</option>
 </select>
 
-<label>Harga Voucher (Net)</label>
+<label>Harga Voucher (Net Hotel)</label>
 <input id="harga"
 type="tel"
 inputmode="numeric"
 placeholder="Masukkan harga voucher">
 
 <div class="result">
-<div class="resultTitle">Net Revenue</div>
+<div class="resultTitle">Room Revenue (Net)</div>
 <div id="hasil" class="resultValue">Rp 0</div>
 
 <div class="subinfo">
@@ -198,36 +198,37 @@ Object.values(divs).forEach(d=>d.innerHTML="Rp 0");
 return;
 }
 
-let net = n;
-let gross = 0;
-let revenue = 0;
+let room=0;
 
-// OTA RULES
-if(jenis.value==="traveloka"){
-gross = net / 0.82;
-revenue = net; // net tetap
-cut.innerHTML = rupiah(gross - net);
+// NET HOTEL
+if(jenis.value==="my"){
+room = n * 0.88;
 }else{
-revenue = net * 0.88;
-gross = net;
-cut.innerHTML = rupiah(net * 0.12);
+let beli = n / 0.82;
+room = beli * 0.75;
 }
 
-hasil.innerHTML = rupiah(revenue);
-guest.innerHTML = rupiah(gross);
+hasil.innerHTML = rupiah(room);
+
+// GROSS (harga tamu sebenarnya)
+let guestPrice = room / 0.82;
+let potongan = guestPrice - room;
+
+guest.innerHTML = rupiah(guestPrice);
+cut.innerHTML = rupiah(potongan);
 
 // divider
-divs.d2.innerHTML = rupiah(revenue/2);
-divs.d3.innerHTML = rupiah(revenue/3);
-divs.d4.innerHTML = rupiah(revenue/4);
-divs.d5.innerHTML = rupiah(revenue/5);
-divs.d6.innerHTML = rupiah(revenue/6);
-divs.d7.innerHTML = rupiah(revenue/7);
-divs.d8.innerHTML = rupiah(revenue/8);
-divs.d9.innerHTML = rupiah(revenue/9);
+divs.d2.innerHTML = rupiah(room/2);
+divs.d3.innerHTML = rupiah(room/3);
+divs.d4.innerHTML = rupiah(room/4);
+divs.d5.innerHTML = rupiah(room/5);
+divs.d6.innerHTML = rupiah(room/6);
+divs.d7.innerHTML = rupiah(room/7);
+divs.d8.innerHTML = rupiah(room/8);
+divs.d9.innerHTML = rupiah(room/9);
 }
 
-// auto format
+// auto format ribuan saat mengetik
 harga.addEventListener("input", function(){
 
 let cursor = harga.selectionStart;
