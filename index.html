@@ -1,0 +1,260 @@
+let html = `
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+*{
+box-sizing:border-box;
+margin:0;
+padding:0;
+font-family:-apple-system,BlinkMacSystemFont,sans-serif;
+}
+
+body{
+background:#0f172a;
+padding:18px;
+color:white;
+}
+
+.card{
+width:100%;
+max-width:520px;
+margin:auto;
+background:#1e293b;
+border-radius:22px;
+padding:20px;
+}
+
+h1{
+font-size:30px;
+margin-bottom:6px;
+}
+
+.sub{
+color:#94a3b8;
+margin-bottom:22px;
+}
+
+label{
+display:block;
+font-size:16px;
+font-weight:600;
+margin-top:14px;
+margin-bottom:8px;
+}
+
+select, input{
+width:100%;
+padding:14px;
+font-size:22px;
+border:none;
+border-radius:14px;
+background:#334155;
+color:white;
+outline:none;
+appearance:none;
+}
+
+.result{
+margin-top:22px;
+background:#16a34a;
+border-radius:18px;
+padding:18px;
+text-align:center;
+}
+
+.resultTitle{
+font-size:16px;
+}
+
+.resultValue{
+margin-top:8px;
+font-size:40px;
+font-weight:bold;
+}
+
+.subinfo{
+margin-top:10px;
+font-size:14px;
+line-height:1.6;
+opacity:.95;
+}
+
+.grid{
+margin-top:16px;
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
+}
+
+.box{
+background:#0f172a;
+padding:12px;
+border-radius:12px;
+text-align:center;
+}
+
+.box small{
+display:block;
+color:#94a3b8;
+}
+
+.box b{
+font-size:15px;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="card">
+
+<h1>OTA Calculator</h1>
+<div class="sub">Traveloka & My Horison (Correct Version)</div>
+
+<label>Jenis OTA</label>
+<select id="jenis">
+<option value="traveloka">Traveloka</option>
+<option value="my">My Horison</option>
+</select>
+
+<label>Harga Voucher (Net)</label>
+<input id="harga"
+type="tel"
+inputmode="numeric"
+placeholder="Masukkan harga voucher">
+
+<div class="result">
+<div class="resultTitle">Net Revenue</div>
+<div id="hasil" class="resultValue">Rp 0</div>
+
+<div class="subinfo">
+<div>Harga Tamu (Gross): <b id="guest">Rp 0</b></div>
+<div>Potongan OTA: <b id="cut">Rp 0</b></div>
+</div>
+
+</div>
+
+<div class="grid">
+<div class="box"><small>÷2</small><b id="d2">Rp 0</b></div>
+<div class="box"><small>÷3</small><b id="d3">Rp 0</b></div>
+<div class="box"><small>÷4</small><b id="d4">Rp 0</b></div>
+<div class="box"><small>÷5</small><b id="d5">Rp 0</b></div>
+<div class="box"><small>÷6</small><b id="d6">Rp 0</b></div>
+<div class="box"><small>÷7</small><b id="d7">Rp 0</b></div>
+<div class="box"><small>÷8</small><b id="d8">Rp 0</b></div>
+<div class="box"><small>÷9</small><b id="d9">Rp 0</b></div>
+</div>
+
+</div>
+
+<script>
+
+const harga=document.getElementById("harga");
+const hasil=document.getElementById("hasil");
+const jenis=document.getElementById("jenis");
+
+const guest=document.getElementById("guest");
+const cut=document.getElementById("cut");
+
+const divs = {
+d2:document.getElementById("d2"),
+d3:document.getElementById("d3"),
+d4:document.getElementById("d4"),
+d5:document.getElementById("d5"),
+d6:document.getElementById("d6"),
+d7:document.getElementById("d7"),
+d8:document.getElementById("d8"),
+d9:document.getElementById("d9")
+};
+
+function clean(val){
+return parseFloat(String(val).replace(/[^0-9]/g,''));
+}
+
+function formatNumber(val){
+val = String(val).replace(/[^0-9]/g,'');
+if(!val) return "";
+return Number(val).toLocaleString("id-ID");
+}
+
+function rupiah(x){
+return "Rp " + Math.round(x).toLocaleString("id-ID");
+}
+
+function hitung(){
+
+let n = clean(harga.value);
+
+if(!n){
+hasil.innerHTML="Rp 0";
+guest.innerHTML="Rp 0";
+cut.innerHTML="Rp 0";
+Object.values(divs).forEach(d=>d.innerHTML="Rp 0");
+return;
+}
+
+let net = n;
+let gross = 0;
+let revenue = 0;
+
+// OTA RULES
+if(jenis.value==="traveloka"){
+gross = net / 0.82;
+revenue = net; // net tetap
+cut.innerHTML = rupiah(gross - net);
+}else{
+revenue = net * 0.88;
+gross = net;
+cut.innerHTML = rupiah(net * 0.12);
+}
+
+hasil.innerHTML = rupiah(revenue);
+guest.innerHTML = rupiah(gross);
+
+// divider
+divs.d2.innerHTML = rupiah(revenue/2);
+divs.d3.innerHTML = rupiah(revenue/3);
+divs.d4.innerHTML = rupiah(revenue/4);
+divs.d5.innerHTML = rupiah(revenue/5);
+divs.d6.innerHTML = rupiah(revenue/6);
+divs.d7.innerHTML = rupiah(revenue/7);
+divs.d8.innerHTML = rupiah(revenue/8);
+divs.d9.innerHTML = rupiah(revenue/9);
+}
+
+// auto format
+harga.addEventListener("input", function(){
+
+let cursor = harga.selectionStart;
+
+let before = harga.value.length;
+
+harga.value = formatNumber(harga.value);
+
+let after = harga.value.length;
+
+let diff = after - before;
+harga.setSelectionRange(cursor + diff, cursor + diff);
+
+hitung();
+
+});
+
+jenis.addEventListener("change",hitung);
+
+setTimeout(()=>harga.focus(),300);
+
+</script>
+
+</body>
+</html>
+`;
+
+let web = new WebView();
+await web.loadHTML(html);
+await web.present();
