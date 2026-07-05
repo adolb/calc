@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OTA Calculator</title>
+<style>
+    *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,sans-serif;}
+    body{background:#0f172a;padding:16px;color:white;transition: all 0.3s ease;}
+    
+    /* Header & Tombol Switch Layout */
+    .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .layout-btn { background: #334155; color: #cbd5e1; border: 1px solid #475569; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; }
+    .layout-btn:active { background: #475569; }
+
+    /* --- MODE DEFAULT: PORTRAIT --- */
+    .container { display: flex; flex-direction: column; gap: 16px; max-width: 520px; margin: auto; }
+    .left-panel { background:#1e293b; border-radius:18px; padding:18px; width: 100%; }
+    .right-panel { background:#1e293b; border-radius:18px; padding:18px; width: 100%; }
+    
+    /* --- MODE TOGGLE: LANDSCAPE --- */
+    body.landscape-mode .container { flex-direction: row; max-width: 1100px; align-items: flex-start; }
+    body.landscape-mode .left-panel { flex: 1.2; }
+    body.landscape-mode .right-panel { flex: 1; align-self: stretch; }
+
+    h1{font-size:24px;}
+    .sub{color:#94a3b8;margin-bottom:12px;font-size:14px;}
+    label{display:block;margin-top:10px;margin-bottom:6px;font-weight:600;font-size:14px;}
+    select,input{width:100%;padding:10px;font-size:16px;border:none;border-radius:10px;background:#334155;color:white;outline:none;}
+    .input-row{display:flex;gap:8px;align-items:center;}
+    input{flex:1;}
+    button{padding:10px 14px;border:none;border-radius:10px;color:white;font-weight:600;cursor:pointer;background:#16a34a;white-space:nowrap;}
+    .status{margin-top:10px;font-size:12px;padding:6px 10px;border-radius:8px;display:inline-block;}
+    .yellow{background:#f59e0b;color:#111;}.green{background:#22c55e;color:#111;}
+    
+    /* Layout Output */
+    .result{margin-top:12px;background:#16a34a;padding:16px;border-radius:14px;text-align:center;color:white;}
+    .resultTitle{font-size:14px; margin-bottom: 4px;}
+    .big{font-size:36px; font-weight:bold; margin-bottom: 10px;}
+    .subinfo{font-size:14px; font-weight: 500;}
+
+    /* Grid Pembagian sampai ÷9 */
+    .row{display:grid;grid-template-columns:repeat(4, 1fr);gap:8px;margin-top:10px;}
+    .box{background:#0f172a;padding:8px;border-radius:8px;text-align:center;font-size:11px;}
+    
+    /* Gaya Area History */
+    .history-title { font-size: 18px; font-weight: bold; margin-bottom: 12px; border-bottom: 2px solid #334155; padding-bottom: 6px; }
+    .history{font-size:12px; color:#cbd5e1;}
+    .hist-item{margin-bottom:8px; border-bottom:1px solid #334155; padding-bottom:6px;}
+    .hist-main{font-family:monospace; font-weight: bold;}
+    .hist-split{font-size:11px; color:#94a3b8; margin-top:3px; font-family:monospace; line-height: 1.4; display: flex; flex-wrap: wrap; gap: 6px;}
+</style>
+</head>
+<body class="landscape-mode">
+
+<div class="container">
+    <div class="left-panel">
+        <div class="header-row">
+            <h1>OTA Calculator</h1>
+            <button class="layout-btn" onclick="toggleLayout()" id="layoutBtn">Landscape</button>
+        </div>
+        <div class="sub">Traveloka / My Horison</div>
+        
+        <label>OTA</label>
+        <select id="ota"><option value="traveloka">Traveloka</option><option value="my">My Horison</option></select>
+        
+        <label>Voucher</label>
+        <div class="input-row">
+            <input id="input" type="tel" inputmode="numeric" placeholder="Masukkan harga...">
+            <button onclick="submit()">Submit</button>
+        </div>
+        <div id="status" class="status yellow">🟡 Belum disimpan</div>
+        
+        <div class="result">
+            <div class="resultTitle">Room Revenue (Net)</div>
+            <div id="net" class="big">Rp 0</div>
+            <div class="subinfo">
+                Harga Tamu (Gross): <span id="gross">Rp 0</span><br>
+                Potongan OTA: <span id="cut">Rp 0</span>
+            </div>
+        </div>
+
+        <div class="row" id="gridBox">
+            <!-- Grid pembagian digenerate otomatis lewat JS di bawah -->
+        </div>
+    </div>
+
+    <div class="right-panel">
+        <div class="history-title">History</div>
+        <div class="history" id="historyBox">Belum ada history</div>
+    </div>
+</div>
+
+<script>
+    // Generate grid box pembagian 2 sampai 9
+    const gridBox = document.getElementById("gridBox");
+    gridBox.innerHTML = [2,3,4,5,6,7,8,9].map(i => `<div class="box" id="d${i}">÷${i}<br><b>0</b></div>`).join('');
+
+    let h = [];
+    
+    const inputEl = document.getElementById("input");
+    const otaEl = document.getElementById("ota");
+    const netEl = document.getElementById("net");
+    const grossEl = document.getElementById("gross");
+    const cutEl = document.getElementById("cut");
+    const statusEl = document.getElementById("status");
+    const historyBoxEl = document.getElementById("historyBox");
+    const layoutBtn = document.getElementById("layoutBtn");
+
+    function toggleLayout() {
+        document.body.classList.toggle("landscape-mode");
+        if(document.body.classList.contains("landscape-mode")) {
+            layoutBtn.innerHTML = "Landscape";
+        } else {
+            layoutBtn.innerHTML = "Portrait";
+        }
+    }
+
+    function r(x){ return "Rp " + Math.round(x).toLocaleString("id-ID"); }
+    function n(x){ return Math.round(x).toLocaleString("id-ID"); }
+    function c(v){ return parseFloat((v||"").replace(/[^0-9]/g,''))||0; }
+
+    function calc(){
+        let raw = inputEl.value;
+        let val = c(raw);
+        let o = otaEl.value;
+        
+        if(val > 0) inputEl.value = val.toLocaleString("id-ID");
+        if(!val){
+            netEl.innerHTML="Rp 0"; grossEl.innerHTML="Rp 0"; cutEl.innerHTML="Rp 0";
+            for(let i=2; i<=9; i++) {
+                document.getElementById("d"+i).innerHTML = "÷"+i+"<br><b>0</b>";
+            }
+            return null;
+        }
+        
+        let netV = (o=="traveloka") ? (val/0.82)*0.75 : val*0.88;
+        let grossV = (o=="traveloka") ? val/0.82 : val;
+        
+        netEl.innerHTML = r(netV);
+        grossEl.innerHTML = r(grossV);
+        cutEl.innerHTML = r(grossV - netV);
+        
+        for(let i=2; i<=9; i++) {
+            document.getElementById("d"+i).innerHTML = "÷"+i+"<br><b>"+n(netV/i)+"</b>";
+        }
+        
+        statusEl.innerHTML = "🟡 Belum disimpan";
+        statusEl.className = "status yellow";
+        return { netVal: netV, inputVal: val, ota: o };
+    }
+
+    function submit(){
+        let res = calc();
+        if(res){
+            h.push(res);
+            h.sort((a, b) => a.netVal - b.netVal);
+            
+            historyBoxEl.innerHTML = h.map(x => {
+                let splitValues = [2, 3, 4, 5, 6]
+                    .map(div => "<span>÷" + div + ":" + n(x.netVal / div) + "</span>")
+                    .join("");
+                
+                return "<div class='hist-item'>" +
+                    "<div class='hist-main'>" + n(x.inputVal) + " -> " + n(x.netVal) + " • " + x.ota.toUpperCase() + "</div>" +
+                    "<div class='hist-split'>" + splitValues + "</div>" +
+                "</div>";
+            }).join("");
+            
+            inputEl.value = ""; 
+            statusEl.innerHTML = "🟢 Tersimpan ke History";
+            statusEl.className = "status green";
+        }
+    }
+    
+    inputEl.oninput = calc;
+    otaEl.onchange = calc;
+</script>
+</body>
+</html>
