@@ -2,11 +2,25 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 <title>OTA Calculator</title>
+
+<!-- Tag agar standalone tanpa address bar (PWA Mode) -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="OTA Calc">
+<meta name="mobile-web-app-capable" content="yes">
+
 <style>
     *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,sans-serif;}
-    body{background:#0f172a;padding:16px;color:white;transition: all 0.3s ease;}
+    
+    /* Mendukung area notch/safe area di iPhone saat fullscreen */
+    body{
+        background:#0f172a;
+        padding: calc(16px + env(safe-area-inset-top)) 16px 16px 16px;
+        color:white;
+        transition: all 0.3s ease;
+    }
     
     /* Header & Tombol Switch Layout */
     .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
@@ -51,13 +65,15 @@
     .hist-split{font-size:11px; color:#94a3b8; margin-top:3px; font-family:monospace; line-height: 1.4; display: flex; flex-wrap: wrap; gap: 6px;}
 </style>
 </head>
-<body class="landscape-mode">
+<!-- Kelas landscape-mode dihapus dari body agar default awal adalah Portrait -->
+<body>
 
 <div class="container">
     <div class="left-panel">
         <div class="header-row">
             <h1>OTA Calculator</h1>
-            <button class="layout-btn" onclick="toggleLayout()" id="layoutBtn">Landscape</button>
+            <!-- Teks tombol disesuaikan awal menjadi Portrait -->
+            <button class="layout-btn" onclick="toggleLayout()" id="layoutBtn">Portrait</button>
         </div>
         <div class="sub">Traveloka / My Horison</div>
         
@@ -80,9 +96,7 @@
             </div>
         </div>
 
-        <div class="row" id="gridBox">
-            <!-- Grid pembagian digenerate otomatis lewat JS di bawah -->
-        </div>
+        <div class="row" id="gridBox"></div>
     </div>
 
     <div class="right-panel">
@@ -92,7 +106,6 @@
 </div>
 
 <script>
-    // Generate grid box pembagian 2 sampai 9
     const gridBox = document.getElementById("gridBox");
     gridBox.innerHTML = [2,3,4,5,6,7,8,9].map(i => `<div class="box" id="d${i}">÷${i}<br><b>0</b></div>`).join('');
 
