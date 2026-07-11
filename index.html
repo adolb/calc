@@ -14,9 +14,11 @@
 
 <script>
 const SUPABASE_URL="https://awlxjzfadktcthbumxle.supabase.co";
-const SUPABASE_KEY="GANTI_DENGAN_PUBLISHABLE_KEY_ANDA";
-const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-
+const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3bHhqemZhZGt0Y3RoYnVteGxlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3ODU3NzgsImV4cCI6MjA5OTM2MTc3OH0.ktRLTXfsYmzb5RH8qKci0FgENkqqVG9atz5sHls9RXI";
+const sb = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+);
 async function upload(){
  const f=document.getElementById('file').files[0];
  if(!f) return alert('Pilih file');
