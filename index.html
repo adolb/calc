@@ -2,54 +2,53 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Workspace Notes</title>
+<title>My Files</title>
 
 <style>
 body{
 font-family:Arial;
 background:#f5f7fb;
-padding:20px;
+padding:20px
 }
 
 .box{
+max-width:600px;
+margin:auto;
 background:white;
 padding:20px;
-border-radius:18px;
-box-shadow:0 5px 20px #ddd;
-max-width:500px;
-margin:auto;
+border-radius:20px;
+box-shadow:0 5px 20px #ddd
 }
 
-input,textarea,button{
+h2{
+color:#2563eb
+}
+
+input,button{
 width:100%;
 padding:12px;
 margin-top:10px;
 border-radius:10px;
-border:1px solid #ddd;
-}
-
-textarea{
-height:120px;
+border:1px solid #ddd
 }
 
 button{
 background:#2563eb;
 color:white;
 border:0;
-font-size:16px;
+font-size:16px
 }
 
-.note{
-background:white;
+.file{
 padding:15px;
-margin-top:15px;
-border-radius:15px;
-box-shadow:0 3px 10px #ddd;
+margin-top:12px;
+background:#f8fafc;
+border-radius:12px
 }
 
-.date{
-font-size:12px;
-color:#888;
+a{
+text-decoration:none;
+color:#2563eb
 }
 </style>
 
@@ -59,13 +58,11 @@ color:#888;
 
 <div class="box">
 
-<h2>📝 My Notes</h2>
+<h2>📁 My Files</h2>
 
-<input id="title" placeholder="Judul">
+<input type="file" id="file">
 
-<textarea id="note" placeholder="Tulis catatan..."></textarea>
-
-<button onclick="saveNote()">Simpan</button>
+<button onclick="uploadFile()">Upload</button>
 
 <div id="list"></div>
 
@@ -79,13 +76,44 @@ const URL="https://awlxjzfadktcthbumxle.supabase.co";
 const KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3bHhqemZhZGt0Y3RoYnVteGxlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3ODU3NzgsImV4cCI6MjA5OTM2MTc3OH0.ktRLTXfsYmzb5RH8qKci0FgENkqqVG9atz5sHls9RXI";
 
 
-async function saveNote(){
+async function uploadFile(){
 
-let title=document.getElementById("title").value;
-let note=document.getElementById("note").value;
+let file=document.getElementById("file").files[0];
+
+if(!file) return alert("Pilih file");
 
 
-await fetch(URL+"/rest/v1/notes",
+let path=Date.now()+"_"+file.name;
+
+
+let upload=await fetch(
+URL+"/storage/v1/object/files/"+path,
+{
+method:"POST",
+headers:{
+"apikey":KEY,
+"Authorization":"Bearer "+KEY,
+"Content-Type":file.type
+},
+body:file
+});
+
+
+if(upload.ok){
+alert("Upload berhasil");
+loadFiles();
+}else{
+alert("Upload gagal");
+}
+
+}
+
+
+
+async function loadFiles(){
+
+let res=await fetch(
+URL+"/storage/v1/object/list/files",
 {
 method:"POST",
 headers:{
@@ -93,51 +121,27 @@ headers:{
 "Authorization":"Bearer "+KEY,
 "Content-Type":"application/json"
 },
-body:JSON.stringify({
-title:title,
-note:note
-})
+body:JSON.stringify({})
 });
 
-
-document.getElementById("title").value="";
-document.getElementById("note").value="";
-
-loadNotes();
-
-}
-
-
-async function loadNotes(){
-
-let res=await fetch(
-URL+"/rest/v1/notes?select=*&order=id.desc",
-{
-headers:{
-"apikey":KEY,
-"Authorization":"Bearer "+KEY
-}
-});
 
 let data=await res.json();
 
-
 let html="";
 
-data.forEach(x=>{
+
+data.forEach(f=>{
+
+let link=
+URL+"/storage/v1/object/public/files/"+f.name;
+
 
 html+=`
 
-<div class="note">
-
-<b>${x.title}</b>
-
-<p>${x.note}</p>
-
-<div class="date">
-${x.created_at || ""}
-</div>
-
+<div class="file">
+📄 <a href="${link}" target="_blank">
+${f.name}
+</a>
 </div>
 
 `;
@@ -150,10 +154,9 @@ document.getElementById("list").innerHTML=html;
 }
 
 
-loadNotes();
+loadFiles();
 
 </script>
-
 
 </body>
 </html>
