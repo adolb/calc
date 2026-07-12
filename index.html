@@ -1,332 +1,229 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>iCloud Dashboard</title>
-
-<!-- Supabase JS Library dari CDN -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<!-- Font Awesome untuk Icon Apple Style -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-<style>
-    * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    }
-
-    body {
-        background: linear-gradient(135deg, #3b82f6, #60a5fa, #93c5fd);
-        min-height: 100vh;
-        padding: 20px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-
-    .dashboard-container {
-        width: 100%;
-        max-width: 460px;
-        display: flex;
-        flex-direction: column;
-        gap: 24px;
-    }
-
-    /* Gaya Kartu Utama ala iCloud */
-    .icloud-card {
-        background: rgba(255, 255, 255, 0.85);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border-radius: 24px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-    }
-
-    /* Bagian Header Kartu */
-    .card-header {
-        padding: 16px 20px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        background: rgba(255, 255, 255, 0.4);
-        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-    }
-
-    .header-left {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-
-    /* Icon Aplikasi Kustom */
-    .app-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 20px;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-    }
-    
-    .drive-icon { background: #e0f2fe; color: #0284c7; }
-    .notes-icon { background: #fef9c3; color: #ca8a04; }
-
-    .app-info h2 {
-        font-size: 20px;
-        font-weight: 600;
-        color: #1e293b;
-    }
-
-    .app-info span {
-        font-size: 13px;
-        color: #64748b;
-        display: flex;
-        align-items: center;
-        gap: 4px;
-    }
-
-    .header-right {
-        color: #ca8a04;
-        font-size: 18px;
-        cursor: pointer;
-    }
-
-    /* Bagian Konten Kartu */
-    .card-body {
-        background: #ffffff;
-        padding: 20px;
-        min-height: 180px;
-        display: flex;
-        flex-direction: column;
-    }
-
-    /* KONTEN DRIVE */
-    .drive-content { gap: 14px; color: #64748b; }
-    .upload-zone {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        border: 2px dashed #cbd5e1;
-        border-radius: 14px;
-        padding: 20px;
-        cursor: pointer;
-        background: #f8fafc;
-        transition: 0.2s;
-    }
-    .upload-zone:hover { background: #f1f5f9; border-color: #3b82f6; }
-    .upload-zone i { font-size: 44px; color: #3b82f6; margin-bottom: 8px; }
-    .upload-zone p { font-size: 16px; font-weight: 500; }
-    
-    .file-list { display: flex; flex-direction: column; width: 100%; margin-top: 8px; max-height: 160px; overflow-y: auto; }
-    .file-item {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 12px 0;
-        border-bottom: 1px solid #f1f5f9;
-    }
-    .file-item:last-child { border-bottom: none; }
-    .file-item-left { display: flex; align-items: center; gap: 10px; font-size: 16px; color: #1e293b; font-weight: 500; }
-    .file-item-left i { color: #64748b; }
-    .download-btn {
-        background: #3b82f6;
-        color: white;
-        border: none;
-        padding: 6px 14px;
-        border-radius: 8px;
-        font-size: 14px;
-        font-weight: 600;
-        cursor: pointer;
-        text-decoration: none;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-    .download-btn:hover { background: #2563eb; }
-
-    /* KONTEN CATATAN */
-    .notes-list { display: flex; flex-direction: column; }
-    .note-item { padding: 14px 0; border-bottom: 1px solid #f1f5f9; cursor: pointer; }
-    .note-item:last-child { border-bottom: none; }
-    .note-title { font-size: 16px; font-weight: 600; color: #1e293b; margin-bottom: 4px; }
-    .note-meta { font-size: 13px; color: #94a3b8; font-family: monospace; }
-    .note-desc { color: #64748b; margin-left: 6px; font-family: sans-serif; }
-
-    /* Bagian Footer Kartu (...) */
-    .card-footer {
-        padding: 8px 20px 14px 20px;
-        background: #ffffff;
-        font-size: 20px;
-        color: #64748b;
-        font-weight: bold;
-        cursor: pointer;
-    }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Catatan & Upload Supabase</title>
+    <!-- Panggil Library Supabase via CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            max-width: 600px; 
+            margin: 40px auto; 
+            padding: 0 20px; 
+            background-color: #f9f9f9;
+            color: #333;
+        }
+        .container {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .form-group { 
+            margin-bottom: 15px; 
+        }
+        label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+        }
+        input[type="text"], input[type="file"] { 
+            width: 100%; 
+            padding: 10px; 
+            margin-top: 5px; 
+            box-sizing: border-box; 
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button { 
+            padding: 12px 15px; 
+            background-color: #24b47e; 
+            color: white; 
+            border: none; 
+            border-radius: 4px;
+            cursor: pointer; 
+            width: 100%; 
+            font-size: 16px; 
+            font-weight: bold;
+            margin-top: 10px; 
+        }
+        button:hover { 
+            background-color: #1c8c62; 
+        }
+        h2 {
+            margin-top: 30px;
+            border-bottom: 2px solid #24b47e;
+            padding-bottom: 5px;
+        }
+        .note-item { 
+            background: #fff;
+            border: 1px solid #eee;
+            border-left: 5px solid #24b47e;
+            padding: 15px; 
+            margin-bottom: 15px;
+            border-radius: 4px;
+        }
+        .note-item h3 { 
+            margin: 0 0 5px 0; 
+            color: #111;
+        }
+        .note-item img { 
+            max-width: 100%; 
+            height: auto;
+            display: block; 
+            margin-top: 10px; 
+            border-radius: 4px; 
+            border: 1px solid #ddd;
+        }
+        .note-item small { 
+            color: #666; 
+            font-size: 12px;
+        }
+        .download-link {
+            display: inline-block;
+            margin-top: 10px;
+            color: #24b47e;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .download-link:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
 
-<div class="dashboard-container">
+    <div class="container">
+        <h1>Catatan & File Saya</h1>
 
-    <!-- KARTU 1: DRIVE -->
-    <div class="icloud-card">
-        <div class="card-header">
-            <div class="header-left">
-                <div class="app-icon drive-icon"><i class="fa-solid fa-folder-open"></i></div>
-                <div class="app-info">
-                    <h2>Drive</h2>
-                    <span><i class="fa-regular fa-clock"></i> Terbaru</span>
-                </div>
-            </div>
+        <!-- Form Input -->
+        <div class="form-group">
+            <label for="input-judul">Judul Catatan:</label>
+            <input type="text" id="input-judul" placeholder="Tulis judul catatan...">
         </div>
-        <div class="card-body drive-content">
-            <div class="upload-zone" onclick="document.getElementById('fileInput').click()">
-                <i class="fa-solid fa-cloud-arrow-up"></i>
-                <p id="uploadStatus">Unggah file pertama Anda</p>
-                <input type="file" id="fileInput" style="display:none" onchange="uploadFile(this)">
-            </div>
-            <div class="file-list" id="fileListContainer">
-                <div style="font-size:13px; color:#94a3b8;">Memuat berkas...</div>
-            </div>
+        <div class="form-group">
+            <label for="input-file">Pilih File/Gambar (Opsional):</label>
+            <input type="file" id="input-file">
         </div>
-        <div class="card-footer">...</div>
+        <button onclick="simpanSemua()">Simpan Catatan & File</button>
+
+        <h2>Daftar Catatan</h2>
+        <div id="daftar-catatan">Memuat catatan...</div>
     </div>
 
-    <!-- KARTU 2: CATATAN -->
-    <div class="icloud-card">
-        <div class="card-header">
-            <div class="header-left">
-                <div class="app-icon notes-icon"><i class="fa-solid fa-note-sticky"></i></div>
-                <div class="app-info">
-                    <h2>Catatan</h2>
-                    <span><i class="fa-solid fa-folder" style="color:#eab308;"></i> Semua iCloud</span>
-                </div>
-            </div>
-            <div class="header-right">
-                <i class="fa-regular fa-pen-to-square"></i>
-            </div>
-        </div>
-        <div class="card-body">
-            <div class="notes-list" id="notesContainer">
-                <div class="note-meta">Memuat catatan...</div>
-            </div>
-        </div>
-        <div class="card-footer">...</div>
-    </div>
+    <script>
+        // Konfigurasi Supabase menggunakan kredensial proyek Anda
+        const SUPABASE_URL = 'https://awlxjzfadktcthbumxle.supabase.co';
+        const SUPABASE_KEY = 'Sb_publishable_LnE9IH5KKDzdV-gj9tIb6w_uOGVZi4o';
+        
+        // Inisialisasi Klien Supabase
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-</div>
-
-<script>
-    // Kredensial Supabase Anda
-    const SUPABASE_URL = "https://awlxjzfadktcthbumxle.supabase.co"; 
-    const SUPABASE_ANON_KEY = "Sb_publishable_LnE9IH5KKDzdV-gj9tIb6w_uOGVZi4o";
-
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    // ==========================================
-    // MANAGEMENT LOGIKA FILE (DRIVE)
-    // ==========================================
-    async function loadFiles() {
-        const container = document.getElementById('fileListContainer');
-        try {
-            const { data, error } = await supabaseClient.storage.from('files').list('', {
-                limit: 10,
-                sortBy: { column: 'name', order: 'desc' }
-            });
-            if (error) throw error;
-
-            if (data && data.length > 0) {
-                container.innerHTML = data.map(file => {
-                    const { data: urlData } = supabaseClient.storage.from('files').getPublicUrl(file.name);
-                    return `
-                        <div class="file-item">
-                            <div class="file-item-left">
-                                <i class="fa-regular fa-file"></i>
-                                <span>${file.name}</span>
-                            </div>
-                            <a href="${urlData.publicUrl}" download="${file.name}" target="_blank" class="download-btn">
-                                <i class="fa-solid fa-download"></i> Unduh
-                            </a>
-                        </div>
-                    `;
-                }).join('');
-            } else {
-                container.innerHTML = '<div style="font-size:14px; text-align:center; padding:10px;">Belum ada berkas di cloud.</div>';
-            }
-        } catch (err) {
-            console.error(err);
-            container.innerHTML = '<div style="font-size:14px; color:#ef4444;">Gagal memuat berkas.</div>';
-        }
-    }
-
-    async function uploadFile(input) {
-        const file = input.files[0];
-        if (!file) return;
-
-        const statusText = document.getElementById('uploadStatus');
-        statusText.innerText = "Mengunggah... ⏳";
-
-        try {
-            const { data, error } = await supabaseClient.storage
-                .from('files')
-                .upload(file.name, file, { cacheControl: '3600', upsert: true });
-
-            if (error) throw error;
-            statusText.innerText = "Berhasil diunggah! ✅";
-            setTimeout(() => { statusText.innerText = "Unggah file pertama Anda"; }, 3000);
-            loadFiles();
-        } catch (err) {
-            console.error(err);
-            statusText.innerText = "Gagal mengunggah! ❌";
-            setTimeout(() => { statusText.innerText = "Unggah file pertama Anda"; }, 3000);
-        }
-    }
-
-    // ==========================================
-    // MANAGEMENT LOGIKA DATA (CATATAN)
-    // ==========================================
-    async function loadNotes() {
-        const container = document.getElementById('notesContainer');
-        try {
-            let { data: catatan, error } = await supabaseClient
-                .from('catatan')
+        // 1. Fungsi Mengambil Catatan dari Tabel 'Notes' dan Menampilkannya
+        async function ambilCatatan() {
+            const wadahCatatan = document.getElementById('daftar-catatan');
+            
+            const { data, error } = await supabaseClient
+                .from('Notes')
                 .select('*')
-                .order('id', { ascending: false });
+                .order('created_at', { ascending: false }); // Urutkan dari yang terbaru
 
-            if (error) throw error;
-
-            if (catatan && catatan.length > 0) {
-                container.innerHTML = catatan.map(note => `
-                    <div class="note-item">
-                        <div class="note-title">${note.title || 'Tanpa Judul'}</div>
-                        <div class="note-meta">
-                            ${note.date_label || ''} <span class="note-desc">${note.description || 'Tidak ada teks tambahan'}</span>
-                        </div>
-                    </div>
-                `).join('');
-            } else {
-                container.innerHTML = '<div class="note-meta">Tidak ada catatan ditemukan.</div>';
+            if (error) {
+                console.error('Error ambil data:', error);
+                wadahCatatan.innerHTML = '<p style="color:red;">Gagal memuat catatan.</p>';
+                return;
             }
-        } catch (error) {
-            console.error(error);
-            container.innerHTML = '<div class="note-meta" style="color:#ef4444;">Gagal memuat catatan.</div>';
+            if (data.length === 0) {
+                wadahCatatan.innerHTML = '<p>Belum ada catatan.</p>';
+                return;
+            }
+
+            wadahCatatan.innerHTML = '';
+            data.forEach(note => {
+                const item = document.createElement('div');
+                item.className = 'note-item';
+                
+                // Cek ekstensi file jika ada file_url di database Anda
+                let tagFile = '';
+                if (note.file_url) {
+                    if (note.file_url.match(/\.(jpeg|jpg|gif|png|webp)$/i)) {
+                        tagFile = `<img src="${note.file_url}" alt="Gambar Catatan">`;
+                    } else {
+                        tagFile = `<br><a class="download-link" href="${note.file_url}" target="_blank">📄 Lihat Lampiran Dokumen</a>`;
+                    }
+                }
+
+                // Menggunakan kolom 'tittle' (dua huruf t) sesuai struktur tabel Anda
+                item.innerHTML = `
+                    <h3>${note.tittle || '(Tanpa Judul)'}</h3>
+                    <small>Dibuat: ${new Date(note.created_at).toLocaleString('id-ID')}</small>
+                    ${tagFile}
+                `;
+                wadahCatatan.appendChild(item);
+            });
         }
-    }
 
-    // Jalankan sinkronisasi data secara bersamaan ketika web dimuat
-    window.onload = () => {
-        loadFiles();
-        loadNotes();
-    };
-</script>
+        // 2. Fungsi Mengunggah File ke Storage dan Menyimpan Data ke Tabel 'Notes'
+        async function simpanSemua() {
+            const inputJudul = document.getElementById('input-judul');
+            const inputFile = document.getElementById('input-file');
+            const teksJudul = inputJudul.value.trim();
 
+            if (!teksJudul) {
+                alert('Tolong isi judul catatan terlebih dahulu!');
+                return;
+            }
+
+            let urlFileTerupload = null;
+
+            // Jika user memilih file, upload ke bucket bernama 'files'
+            if (inputFile.files.length > 0) {
+                const file = inputFile.files[0];
+                const namaFileUnik = `${Date.now()}_${file.name}`; // Mencegah nama file duplikat
+
+                const { data: uploadData, error: uploadError } = await supabaseClient.storage
+                    .from('files')
+                    .upload(namaFileUnik, file);
+
+                if (uploadError) {
+                    console.error('Gagal upload file:', uploadError);
+                    alert('Gagal mengunggah file: ' + uploadError.message);
+                    return; 
+                }
+
+                // Dapatkan URL publik dari file yang sukses di-upload
+                const { data: urlData } = supabaseClient.storage
+                    .from('files')
+                    .getPublicUrl(namaFileUnik);
+                
+                urlFileTerupload = urlData.publicUrl;
+            }
+
+            // Masukkan data baru ke tabel 'Notes'
+            const { error: insertError } = await supabaseClient
+                .from('Notes')
+                .insert([
+                    { 
+                        tittle: teksJudul,        // Kolom judul (tittle)
+                        file_url: urlFileTerupload // Kolom link file (pastikan sudah ditambahkan di tabel)
+                    }
+                ]);
+
+            if (insertError) {
+                console.error('Gagal insert data:', insertError);
+                alert('Gagal menyimpan catatan: ' + insertError.message);
+            } else {
+                alert('Catatan berhasil disimpan!');
+                inputJudul.value = ''; // Reset input text
+                inputFile.value = '';  // Reset input file
+                ambilCatatan();        // Segarkan list catatan otomatis
+            }
+        }
+
+        // Jalankan fungsi saat pertama kali halaman web dibuka
+        window.onload = ambilCatatan;
+    </script>
 </body>
 </html>
