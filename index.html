@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>My Dashboard Grid</title>
+<title>My iCloud Style Dashboard Grid</title>
 
-<!-- Menggunakan CDN unpkg yang stabil untuk mobile browser -->
-<script src="https://unpkg.com/@supabase/supabase-js@2.39.8/dist/umd/supabase.js"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <style>
     * {
@@ -25,6 +25,7 @@
         align-items: center;
     }
 
+    /* Grid Layout Utama */
     .dashboard-grid {
         width: 100%;
         max-width: 960px;
@@ -39,12 +40,13 @@
         }
     }
 
+    /* Gaya Kartu Utama ala iCloud */
     .icloud-card {
-        background: rgba(255, 255, 255, 0.9);
+        background: rgba(255, 255, 255, 0.85);
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
         border-radius: 24px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         overflow: hidden;
         display: flex;
         flex-direction: column;
@@ -56,7 +58,7 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        background: rgba(255, 255, 255, 0.5);
+        background: rgba(255, 255, 255, 0.4);
         border-bottom: 1px solid rgba(0, 0, 0, 0.05);
     }
 
@@ -73,14 +75,14 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 22px;
+        font-size: 20px;
         box-shadow: 0 2px 6px rgba(0,0,0,0.08);
     }
 
-    .notes-icon { background: #fef9c3; }
-    .drive-icon { background: #e0f2fe; }
-    .bookmark-icon { background: #dcfce7; }
-    .calc-icon { background: #fee2e2; }
+    .notes-icon { background: #fef9c3; color: #ca8a04; }
+    .drive-icon { background: #e0f2fe; color: #0284c7; }
+    .bookmark-icon { background: #dcfce7; color: #16a34a; }
+    .calc-icon { background: #fee2e2; color: #dc2626; }
 
     .app-info h2 {
         font-size: 16px;
@@ -93,12 +95,15 @@
         color: #64748b;
     }
 
-    .header-btn {
-        font-size: 22px;
+    .header-right {
+        font-size: 16px;
         cursor: pointer;
-        user-select: none;
-        padding: 4px;
+        transition: opacity 0.2s;
     }
+    .header-right:hover { opacity: 0.7; }
+    .notes-color { color: #ca8a04; }
+    .drive-color { color: #0284c7; }
+    .bookmark-color { color: #16a34a; }
 
     .card-body {
         background: #ffffff;
@@ -112,9 +117,15 @@
         flex-direction: column;
     }
 
+    /* Baris List Item */
     .item-row {
         padding: 10px 0;
         border-bottom: 1px solid #f1f5f9;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    .item-row:hover {
+        background: rgba(0, 0, 0, 0.02);
     }
     .item-row:last-child { border-bottom: none; }
 
@@ -127,144 +138,211 @@
         font-size: 12px;
         color: #94a3b8;
         margin-top: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
     .item-link {
         color: #3b82f6;
         text-decoration: none;
     }
 
-    .drive-content {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        color: #64748b;
-        gap: 12px;
-        text-align: center;
-        cursor: pointer;
-        height: 100%;
-    }
-    .drive-content .cloud-emoji { font-size: 48px; }
-
-    .calc-box {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        height: 100%;
-    }
-    .calc-screen {
-        width: 100%;
-        background: #f1f5f9;
-        border: none;
-        padding: 12px;
-        font-size: 22px;
-        text-align: right;
-        border-radius: 12px;
-        color: #1e293b;
-        font-weight: 600;
-    }
-    .calc-buttons {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 8px;
-        flex: 1;
-    }
-    .calc-btn {
+    /* DRIVE */
+    .drive-upload-zone {
         background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        border-radius: 10px;
-        font-size: 16px;
-        font-weight: 600;
-        color: #334155;
+        border: 2px dashed #cbd5e1;
+        border-radius: 16px;
+        padding: 12px;
+        text-align: center;
+        color: #64748b;
         cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        margin-bottom: 12px;
+        font-size: 13px;
     }
-    .calc-btn:active { background: #cbd5e1; }
+    .drive-upload-zone i { font-size: 24px; color: #3b82f6; margin-bottom: 4px; display: block;}
+
+    /* KALKULATOR */
+    .calc-box { display: flex; flex-direction: column; gap: 10px; height: 100%; }
+    .calc-screen { width: 100%; background: #f1f5f9; border: none; padding: 12px; font-size: 22px; text-align: right; border-radius: 12px; color: #1e293b; font-weight: 600; }
+    .calc-buttons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; flex: 1; }
+    .calc-btn { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 16px; font-weight: 600; color: #334155; cursor: pointer; display: flex; align-items: center; justify-content: center; }
     .btn-operator { background: #ffedd5; color: #ea580c; }
     .btn-equal { background: #3b82f6; color: white; }
 
-    .card-footer {
-        padding: 6px 20px 10px 20px;
-        background: #ffffff;
-        font-size: 12px;
-        color: #94a3b8;
-        border-top: 1px solid #f8fafc;
+    .card-footer { padding: 6px 20px 10px 20px; background: #ffffff; font-size: 13px; color: #94a3b8; border-top: 1px solid #f8fafc; }
+
+    /* ========================================================
+       STYLE JENDELA POP-UP (MODAL PREVIEW & EMAIL FORM INPUT)
+       ======================================================== */
+    .modal-overlay {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        padding: 20px;
     }
+    .modal-box {
+        background: white;
+        width: 100%;
+        max-width: 520px;
+        border-radius: 20px;
+        padding: 24px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+        display: flex;
+        flex-direction: column;
+        max-height: 85vh;
+    }
+    .modal-title { font-size: 20px; font-weight: 700; color: #1e293b; margin-bottom: 12px; }
+    .modal-body { font-size: 15px; color: #334155; line-height: 1.6; overflow-y: auto; flex: 1; white-space: pre-wrap; }
+    
+    /* Style Khusus Form ala Email */
+    .email-form-group {
+        margin-bottom: 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+    .email-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #64748b;
+    }
+    .email-input-subject {
+        width: 100%;
+        padding: 10px 14px;
+        font-size: 14px;
+        border: 1px solid #cbd5e1;
+        border-radius: 10px;
+        color: #1e293b;
+        outline: none;
+    }
+    .email-input-subject:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    }
+    .email-textarea-body {
+        width: 100%;
+        height: 180px;
+        padding: 12px 14px;
+        font-size: 14px;
+        border: 1px solid #cbd5e1;
+        border-radius: 12px;
+        color: #1e293b;
+        outline: none;
+        resize: none;
+    }
+    .email-textarea-body:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    }
+    
+    /* Tombol Aksi */
+    .modal-action-buttons {
+        display: flex;
+        gap: 12px;
+        margin-top: 16px;
+    }
+    .btn-action {
+        flex: 1;
+        padding: 12px;
+        font-weight: 600;
+        font-size: 14px;
+        border-radius: 12px;
+        cursor: pointer;
+        border: none;
+        text-align: center;
+        transition: opacity 0.2s;
+    }
+    .btn-action:hover { opacity: 0.9; }
+    .btn-cancel { background: #f1f5f9; color: #475569; }
+    .btn-submit { background: #3b82f6; color: white; }
+    .btn-close-only { background: #3b82f6; color: white; width: 100%; margin-top: 16px; }
 </style>
 </head>
 <body>
 
 <div class="dashboard-grid">
 
-    <!-- BOX 1: CATATAN -->
     <div class="icloud-card">
         <div class="card-header">
             <div class="header-left">
-                <div class="app-icon notes-icon">📝</div>
+                <div class="app-icon notes-icon"><i class="fa-solid fa-note-sticky"></i></div>
                 <div class="app-info">
                     <h2>Catatan</h2>
-                    <span>Cloud Database</span>
+                    <span>Semua iCloud</span>
                 </div>
             </div>
-            <div class="header-btn" onclick="addNote()">✍️</div>
+            <div class="header-right notes-color" onclick="openCreateNoteModal()">
+                <i class="fa-regular fa-pen-to-square"></i>
+            </div>
         </div>
         <div class="card-body">
             <div class="list-container" id="notesContainer">
-                <div class="item-meta">Menghubungkan ke server...</div>
+                <div class="item-meta">Memuat catatan...</div>
             </div>
         </div>
         <div class="card-footer" id="notesFooter">0 Catatan</div>
     </div>
 
-    <!-- BOX 2: DRIVE -->
     <div class="icloud-card">
         <div class="card-header">
             <div class="header-left">
-                <div class="app-icon drive-icon">📁</div>
+                <div class="app-icon drive-icon"><i class="fa-solid fa-folder-open"></i></div>
                 <div class="app-info">
                     <h2>Drive</h2>
-                    <span>Penyimpanan File</span>
+                    <span>File Saya</span>
                 </div>
             </div>
+            <div class="header-right drive-color" onclick="loadDriveFiles()">
+                <i class="fa-solid fa-rotate-right"></i>
+            </div>
         </div>
-        <div class="card-body drive-content" onclick="document.getElementById('fileInput').click()">
-            <div class="cloud-emoji">☁️</div>
-            <p id="uploadStatus">Klik untuk Unggah Berkas</p>
-            <input type="file" id="fileInput" style="display: none;" onchange="handleFileUpload(event)">
+        <div class="card-body">
+            <div class="drive-upload-zone" onclick="document.getElementById('fileInput').click()">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+                <span id="uploadStatus">Ketuk untuk unggah file baru</span>
+                <input type="file" id="fileInput" style="display: none;" onchange="handleFileUpload(event)">
+            </div>
+            <div class="list-container" id="driveContainer">
+                <div class="item-meta">Memuat berkas...</div>
+            </div>
         </div>
-        <div class="card-footer">Bucket: 'documents'</div>
+        <div class="card-footer" id="driveFooter">0 Berkas</div>
     </div>
 
-    <!-- BOX 3: BOOKMARK -->
     <div class="icloud-card">
         <div class="card-header">
             <div class="header-left">
-                <div class="app-icon bookmark-icon">🔖</div>
+                <div class="app-icon bookmark-icon"><i class="fa-solid fa-bookmark"></i></div>
                 <div class="app-info">
                     <h2>Bookmark</h2>
-                    <span>Link Favorit</span>
+                    <span>Tautan Tersimpan</span>
                 </div>
             </div>
-            <div class="header-btn" onclick="addBookmark()">➕</div>
+            <div class="header-right bookmark-color" onclick="addBookmark()">
+                <i class="fa-solid fa-plus"></i>
+            </div>
         </div>
         <div class="card-body">
             <div class="list-container" id="bookmarkContainer">
-                <div class="item-meta">Menghubungkan ke server...</div>
+                <div class="item-meta">Memuat bookmark...</div>
             </div>
         </div>
         <div class="card-footer" id="bookmarkFooter">0 Tautan</div>
     </div>
 
-    <!-- BOX 4: KALKULATOR -->
     <div class="icloud-card">
         <div class="card-header">
             <div class="header-left">
-                <div class="app-icon calc-icon">🧮</div>
+                <div class="app-icon calc-icon"><i class="fa-solid fa-calculator"></i></div>
                 <div class="app-info">
                     <h2>Kalkulator</h2>
-                    <span>Sistem Instan</span>
+                    <span>Instan</span>
                 </div>
             </div>
         </div>
@@ -300,135 +378,219 @@
 
 </div>
 
-<script>
-    const url_db = "https://awlxjzfadktcthbumxle.supabase.co"; 
-    const key_db = "EyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3bHhqemZhZGt0Y3RoYnVteGxlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3ODU3NzgsImV4cCI6MjA5OTM2MTc3OH0.ktRLTXfsYmzb5RH8qKci0FgENkqqVG9atz5sHls9RXI";
+<div class="modal-overlay" id="noteViewModal" onclick="closeNoteViewModal()">
+    <div class="modal-box" onclick="event.stopPropagation()">
+        <div class="modal-title" id="modalViewTitle">Judul Catatan</div>
+        <div class="modal-body" id="modalViewBody">Isi lengkap catatan Anda...</div>
+        <button class="btn-action btn-close-only" onclick="closeNoteViewModal()">Tutup</button>
+    </div>
+</div>
 
-    var clientCloud = null;
+<div class="modal-overlay" id="noteCreateModal" onclick="closeCreateNoteModal()">
+    <div class="modal-box" onclick="event.stopPropagation()">
+        <div class="modal-title"><i class="fa-regular fa-envelope" style="color:#3b82f6; margin-right:8px;"></i>Catatan Baru</div>
+        
+        <div class="card-body" style="padding:0; overflow:visible;">
+            <div class="email-form-group">
+                <label class="email-label">Judul / Subjek:</label>
+                <input type="text" id="noteSubjectInput" class="email-input-subject" placeholder="Ketik subjek catatan Anda...">
+            </div>
+            
+            <div class="email-form-group">
+                <label class="email-label">Isi Catatan:</label>
+                <textarea id="noteBodyInput" class="email-textarea-body" placeholder="Tulis teks isi catatan Anda di sini secara leluasa..."></textarea>
+            </div>
+        </div>
+
+        <div class="modal-action-buttons">
+            <button class="btn-action btn-cancel" onclick="closeCreateNoteModal()">Batal</button>
+            <button class="btn-action btn-submit" onclick="submitNewNote()">Kirim & Simpan</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const SUPABASE_URL = "https://awlxjzfadktcthbumxle.supabase.co"; 
+    const SUPABASE_ANON_KEY = "sb_publishable_LnE9IH5KKDzdV-gj9tIb6w_uOGVZi4o";
+
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        auth: { persistSession: false, autoRefreshToken: false }
+    });
+
+    let currentNotesList = [];
 
     window.onload = function() {
-        try {
-            // Konfigurasi ekstra global header untuk memaksa otentikasi anonim bypass isu token expired browser
-            const options = {
-                auth: {
-                    persistSession: false,
-                    autoRefreshToken: false,
-                    detectSessionInUrl: false
-                }
-            };
-            
-            if (window.supabase && typeof window.supabase.createClient === 'function') {
-                clientCloud = window.supabase.createClient(url_db, key_db, options);
-            } else if (typeof supabase !== 'undefined' && supabase.createClient) {
-                clientCloud = supabase.createClient(url_db, key_db, options);
-            }
-        } catch (e) {
-            console.error(e);
-        }
-
-        if (clientCloud) {
-            loadNotes();
-            loadBookmarks();
-        } else {
-            document.getElementById('notesContainer').innerHTML = "<div class='item-meta' style='color:#ef4444;'>Gagal memuat sistem basis data.</div>";
-        }
+        loadNotes();
+        loadDriveFiles();
+        loadBookmarks();
     };
+
+    function escapeHTML(str) {
+        if (!str) return '';
+        return str.replace(/[&<>'"]/g, 
+            tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+        );
+    }
 
     // ====== FUNGSI CATATAN ======
     async function loadNotes() {
-        if (!clientCloud) return;
         const container = document.getElementById('notesContainer');
         const footer = document.getElementById('notesFooter');
         try {
-            let { data: catatan, error } = await clientCloud.from('catatan').select('*').order('id', { ascending: false }); 
+            let { data: catatan, error } = await supabaseClient.from('catatan').select('*').order('id', { ascending: false }); 
             if (error) throw error;
+            
+            currentNotesList = catatan || [];
+
             if (catatan && catatan.length > 0) {
                 footer.innerText = `${catatan.length} Catatan`;
-                container.innerHTML = catatan.map(note => `
-                    <div class="item-row">
-                        <div class="item-title">${note.title || 'Tanpa Judul'}</div>
-                        <div class="item-meta">${note.date_label || ''} - <span>${note.description || ''}</span></div>
-                    </div>
-                `).join('');
+                container.innerHTML = catatan.map((note, index) => {
+                    const judulAman = escapeHTML(note.tittle || 'Tanpa Judul');
+                    const isiAman = escapeHTML(note.description || 'Tidak ada deskripsi.');
+                    return `
+                        <div class="item-row" onclick="viewFullNote(${index})">
+                            <div class="item-title">${judulAman}</div>
+                            <div class="item-meta"><span>${isiAman}</span></div>
+                        </div>
+                    `;
+                }).join('');
             } else { 
-                container.innerHTML = '<div class="item-meta">Tidak ada catatan ditemukan.</div>'; 
+                container.innerHTML = '<div class="item-meta">Tidak ada catatan.</div>'; 
                 footer.innerText = '0 Catatan';
             }
         } catch (error) { 
-            container.innerHTML = `<div class="item-meta" style="color:#ef4444;">Pesan sistem: ${error.message}</div>`; 
+            container.innerHTML = `<div class="item-meta" style="color:#ef4444;">Gagal memuat: ${error.message}</div>`; 
         }
     }
 
-    async function addNote() {
-        if(!clientCloud) { alert("Sistem belum siap."); return; }
-        const title = prompt("Masukkan judul catatan:");
-        if (!title) return;
-        const description = prompt("Masukkan isi catatan:");
-        const now = new Date();
-        const date_label = `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear().toString().substring(2)}`;
+    // Membuka Pratinjau Catatan
+    function viewFullNote(index) {
+        const note = currentNotesList[index];
+        if (!note) return;
+        document.getElementById('modalViewTitle').innerText = note.tittle || 'Tanpa Judul';
+        document.getElementById('modalViewBody').innerText = note.description || 'Tidak ada isi deskripsi.';
+        document.getElementById('noteViewModal').style.display = 'flex';
+    }
+
+    function closeNoteModal() { closeNoteViewModal(); }
+    function closeNoteViewModal() {
+        document.getElementById('noteViewModal').style.display = 'none';
+    }
+
+    // Mengendalikan Pop-up Form Input Baru ala Email
+    function openCreateNoteModal() {
+        // Bersihkan data input lama
+        document.getElementById('noteSubjectInput').value = "";
+        document.getElementById('noteBodyInput').value = "";
+        document.getElementById('noteCreateModal').style.display = 'flex';
+    }
+
+    function closeCreateNoteModal() {
+        document.getElementById('noteCreateModal').style.display = 'none';
+    }
+
+    // Mengirim Data Hasil Input Form Email ke Supabase
+    async function submitNewNote() {
+        const judul = document.getElementById('noteSubjectInput').value.trim();
+        const isi = document.getElementById('noteBodyInput').value.trim();
+        
+        if (!judul) {
+            alert("Subjek / Judul tidak boleh kosong!");
+            return;
+        }
+
         try {
-            const { error } = await clientCloud.from('catatan').insert([{ title, description, date_label }]);
+            const { error } = await supabaseClient.from('catatan').insert([{ tittle: judul, description: isi }]);
             if (error) throw error;
-            loadNotes();
-        } catch (error) { alert("Gagal Menyimpan: " + error.message); }
+            
+            closeCreateNoteModal(); // Tutup pop-up input
+            loadNotes(); // Muat ulang list catatan
+        } catch (error) { 
+            alert("Gagal Menyimpan Catatan: " + error.message); 
+        }
     }
 
     // ====== FUNGSI DRIVE ======
+    async function loadDriveFiles() {
+        const container = document.getElementById('driveContainer');
+        const footer = document.getElementById('driveFooter');
+        try {
+            const { data: files, error } = await supabaseClient.storage.from('documents').list('uploads', {
+                limit: 100,
+                sortBy: { column: 'created_at', order: 'desc' }
+            });
+            if (error) throw error;
+
+            if (files && files.length > 0) {
+                footer.innerText = `${files.length} Berkas`;
+                container.innerHTML = files.map(file => {
+                    const { data: publicUrlData } = supabaseClient.storage.from('documents').getPublicUrl(`uploads/${file.name}`);
+                    const namaFileAman = escapeHTML(file.name.substring(file.name.indexOf('_') + 1));
+                    return `
+                        <div class="item-row">
+                            <div class="item-title">${namaFileAman}</div>
+                            <div class="item-meta"><a href="${publicUrlData.publicUrl}" target="_blank" class="item-link">Lihat / Unduh Berkas</a></div>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                container.innerHTML = '<div class="item-meta">Tidak ada berkas di cloud.</div>';
+                footer.innerText = '0 Berkas';
+            }
+        } catch (error) { container.innerHTML = `<div class="item-meta" style="color:#ef4444;">Gagal memuat file: ${error.message}</div>`; }
+    }
+
     async function handleFileUpload(event) {
-        if(!clientCloud) return;
         const file = event.target.files[0];
         if (!file) return;
         const statusText = document.getElementById('uploadStatus');
-        statusText.innerText = `Mengunggah: ${file.name}...`;
+        statusText.innerHTML = `⏳ Mengunggah...`;
         try {
             const fileExt = file.name.split('.').pop();
-            const filePath = `uploads/${Math.random()}.${fileExt}`;
-            let { error } = await clientCloud.storage.from('documents').upload(filePath, file);
+            const filePath = `uploads/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9]/g, '_')}.${fileExt}`;
+            let { error } = await supabaseClient.storage.from('documents').upload(filePath, file);
             if (error) throw error;
-            statusText.innerText = `✅ Berhasil: ${file.name}`;
-        } catch (error) {
-            statusText.innerText = "❌ Gagal mengunggah.";
-            alert("Error Storage: " + error.message);
-        }
+            statusText.innerHTML = `✅ Berhasil mengunggah!`;
+            setTimeout(() => { statusText.innerHTML = "Ketuk untuk unggah file baru"; }, 3000);
+            loadDriveFiles();
+        } catch (error) { statusText.innerHTML = "❌ Gagal mengunggah."; alert("Storage Error: " + error.message); }
     }
 
     // ====== FUNGSI BOOKMARK ======
     async function loadBookmarks() {
-        if (!clientCloud) return;
         const container = document.getElementById('bookmarkContainer');
         const footer = document.getElementById('bookmarkFooter');
         try {
-            let { data: bookmarks, error } = await clientCloud.from('bookmarks').select('*').order('id', { ascending: false });
+            let { data: bookmarks, error } = await supabaseClient.from('bookmark').select('*').order('id', { ascending: false });
             if (error) throw error;
+            
             if (bookmarks && bookmarks.length > 0) {
                 footer.innerText = `${bookmarks.length} Tautan`;
-                container.innerHTML = bookmarks.map(bk => `
-                    <div class="item-row">
-                        <div class="item-title">${bk.nama || 'Tautan Tanpa Nama'}</div>
-                        <div class="item-meta"><a href="${bk.url}" target="_blank" class="item-link">${bk.url}</a></div>
-                    </div>
-                `).join('');
-            } else { 
-                container.innerHTML = '<div class="item-meta">Tidak ada bookmark ditemukan.</div>'; 
-                footer.innerText = '0 Tautan';
-            }
-        } catch (error) { 
-            container.innerHTML = `<div class="item-meta" style="color:#ef4444;">Pesan sistem: ${error.message}</div>`; 
-        }
+                container.innerHTML = bookmarks.map(bk => {
+                    const namaAman = escapeHTML(bk.nama || bk.title || 'Tautan');
+                    const urlAman = escapeHTML(bk.url);
+                    return `
+                        <div class="item-row">
+                            <div class="item-title">${namaAman}</div>
+                            <div class="item-meta"><a href="${urlAman}" target="_blank" class="item-link">${urlAman}</a></div>
+                        </div>
+                    `;
+                }).join('');
+            } else { container.innerHTML = '<div class="item-meta">Tidak ada bookmark.</div>'; footer.innerText = '0 Tautan'; }
+        } catch (error) { container.innerHTML = `<div class="item-meta" style="color:#ef4444;">Gagal: ${error.message}</div>`; }
     }
 
     async function addBookmark() {
-        if(!clientCloud) return;
-        const nama = prompt("Masukkan nama/judul website:");
+        const nama = prompt("Masukkan nama website:");
         if (!nama) return;
         let url = prompt("Masukkan URL website:");
         if (!url) return;
         if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
         try {
-            const { error } = await clientCloud.from('bookmarks').insert([{ nama, url }]);
+            const { error } = await supabaseClient.from('bookmark').insert([{ nama: nama, url: url }]);
             if (error) throw error;
             loadBookmarks();
-        } catch (error) { alert("Gagal Menyimpan: " + error.message); }
+        } catch (error) { alert("Gagal: " + error.message); }
     }
 
     // ====== FUNGSI KALKULATOR ======
