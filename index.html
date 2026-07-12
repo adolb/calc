@@ -1,46 +1,159 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Supabase Upload Test</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<title>Workspace Notes</title>
+
+<style>
+body{
+font-family:Arial;
+background:#f5f7fb;
+padding:20px;
+}
+
+.box{
+background:white;
+padding:20px;
+border-radius:18px;
+box-shadow:0 5px 20px #ddd;
+max-width:500px;
+margin:auto;
+}
+
+input,textarea,button{
+width:100%;
+padding:12px;
+margin-top:10px;
+border-radius:10px;
+border:1px solid #ddd;
+}
+
+textarea{
+height:120px;
+}
+
+button{
+background:#2563eb;
+color:white;
+border:0;
+font-size:16px;
+}
+
+.note{
+background:white;
+padding:15px;
+margin-top:15px;
+border-radius:15px;
+box-shadow:0 3px 10px #ddd;
+}
+
+.date{
+font-size:12px;
+color:#888;
+}
+</style>
+
 </head>
+
 <body>
-<h2>Upload Test</h2>
-<input type="file" id="file">
-<button onclick="upload()">Upload</button>
-<ul id="list"></ul>
+
+<div class="box">
+
+<h2>📝 My Notes</h2>
+
+<input id="title" placeholder="Judul">
+
+<textarea id="note" placeholder="Tulis catatan..."></textarea>
+
+<button onclick="saveNote()">Simpan</button>
+
+<div id="list"></div>
+
+</div>
+
 
 <script>
-const SUPABASE_URL="https://awlxjzfadktcthbumxle.supabase.co";
-const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3bHhqemZhZGt0Y3RoYnVteGxlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3ODU3NzgsImV4cCI6MjA5OTM2MTc3OH0.ktRLTXfsYmzb5RH8qKci0FgENkqqVG9atz5sHls9RXI";
-const sb = window.supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_KEY
-);
-async function upload(){
- const f=document.getElementById('file').files[0];
- if(!f) return alert('Pilih file');
- const name=Date.now()+"_"+f.name;
- const {error}=await sb.storage.from('files').upload(name,f);
- if(error){alert(error.message);return;}
- alert('Upload berhasil');
- loadFiles();
+
+const URL="https://awlxjzfadktcthbumxle.supabase.co";
+
+const KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3bHhqemZhZGt0Y3RoYnVteGxlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3ODU3NzgsImV4cCI6MjA5OTM2MTc3OH0.ktRLTXfsYmzb5RH8qKci0FgENkqqVG9atz5sHls9RXI";
+
+
+async function saveNote(){
+
+let title=document.getElementById("title").value;
+let note=document.getElementById("note").value;
+
+
+await fetch(URL+"/rest/v1/notes",
+{
+method:"POST",
+headers:{
+"apikey":KEY,
+"Authorization":"Bearer "+KEY,
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+title:title,
+note:note
+})
+});
+
+
+document.getElementById("title").value="";
+document.getElementById("note").value="";
+
+loadNotes();
+
 }
-async function loadFiles(){
- const {data,error}=await sb.storage.from('files').list();
- const ul=document.getElementById('list');
- ul.innerHTML='';
- if(error){ul.innerHTML='<li>'+error.message+'</li>';return;}
- data.forEach(x=>{
-  const li=document.createElement('li');
-  const {data:url}=sb.storage.from('files').getPublicUrl(x.name);
-  li.innerHTML=`<a href="${url.publicUrl}" target="_blank">${x.name}</a>`;
-  ul.appendChild(li);
- });
+
+
+async function loadNotes(){
+
+let res=await fetch(
+URL+"/rest/v1/notes?select=*&order=id.desc",
+{
+headers:{
+"apikey":KEY,
+"Authorization":"Bearer "+KEY
 }
-loadFiles();
+});
+
+let data=await res.json();
+
+
+let html="";
+
+data.forEach(x=>{
+
+html+=`
+
+<div class="note">
+
+<b>${x.title}</b>
+
+<p>${x.note}</p>
+
+<div class="date">
+${x.created_at || ""}
+</div>
+
+</div>
+
+`;
+
+});
+
+
+document.getElementById("list").innerHTML=html;
+
+}
+
+
+loadNotes();
+
 </script>
+
+
 </body>
 </html>
