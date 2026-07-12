@@ -3,11 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>My iCloud Style Dashboard Grid</title>
+<title>My Dashboard Grid</title>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 
 <style>
     * {
@@ -26,7 +24,6 @@
         align-items: center;
     }
 
-    /* Grid Layout Utama */
     .dashboard-grid {
         width: 100%;
         max-width: 960px;
@@ -41,26 +38,24 @@
         }
     }
 
-    /* Gaya Kartu Utama ala iCloud */
     .icloud-card {
-        background: rgba(255, 255, 255, 0.85);
+        background: rgba(255, 255, 255, 0.9);
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
         border-radius: 24px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
         overflow: hidden;
         display: flex;
         flex-direction: column;
         height: 320px;
     }
 
-    /* Bagian Header Kartu */
     .card-header {
         padding: 16px 20px;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        background: rgba(255, 255, 255, 0.4);
+        background: rgba(255, 255, 255, 0.5);
         border-bottom: 1px solid rgba(0, 0, 0, 0.05);
     }
 
@@ -77,14 +72,14 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 20px;
+        font-size: 22px;
         box-shadow: 0 2px 6px rgba(0,0,0,0.08);
     }
 
-    .notes-icon { background: #fef9c3; color: #ca8a04; }
-    .drive-icon { background: #e0f2fe; color: #0284c7; }
-    .bookmark-icon { background: #dcfce7; color: #16a34a; }
-    .calc-icon { background: #fee2e2; color: #dc2626; }
+    .notes-icon { background: #fef9c3; }
+    .drive-icon { background: #e0f2fe; }
+    .bookmark-icon { background: #dcfce7; }
+    .calc-icon { background: #fee2e2; }
 
     .app-info h2 {
         font-size: 16px;
@@ -97,16 +92,14 @@
         color: #64748b;
     }
 
-    .header-right {
-        font-size: 16px;
+    .header-btn {
+        font-size: 22px;
         cursor: pointer;
-        transition: opacity 0.2s;
+        user-select: none;
+        transition: transform 0.1s;
     }
-    .header-right:hover { opacity: 0.7; }
-    .notes-color { color: #ca8a04; }
-    .bookmark-color { color: #16a34a; }
+    .header-btn:active { transform: scale(0.9); }
 
-    /* Bagian Konten Kartu */
     .card-body {
         background: #ffffff;
         padding: 20px;
@@ -139,9 +132,7 @@
         color: #3b82f6;
         text-decoration: none;
     }
-    .item-link:hover { text-decoration: underline; }
 
-    /* DRIVE */
     .drive-content {
         display: flex;
         flex-direction: column;
@@ -151,10 +142,10 @@
         gap: 12px;
         text-align: center;
         cursor: pointer;
+        height: 100%;
     }
-    .drive-content i { font-size: 48px; color: #3b82f6; }
+    .drive-content .cloud-emoji { font-size: 48px; }
 
-    /* KALKULATOR */
     .calc-box {
         display: flex;
         flex-direction: column;
@@ -189,7 +180,6 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: background 0.1s;
     }
     .calc-btn:active { background: #cbd5e1; }
     .btn-operator { background: #ffedd5; color: #ea580c; }
@@ -199,9 +189,8 @@
     .card-footer {
         padding: 6px 20px 10px 20px;
         background: #ffffff;
-        font-size: 16px;
-        color: #64748b;
-        font-weight: bold;
+        font-size: 12px;
+        color: #94a3b8;
         border-top: 1px solid #f8fafc;
     }
 </style>
@@ -213,70 +202,66 @@
     <div class="icloud-card">
         <div class="card-header">
             <div class="header-left">
-                <div class="app-icon notes-icon"><i class="fa-solid fa-note-sticky"></i></div>
+                <div class="app-icon notes-icon">📝</div>
                 <div class="app-info">
                     <h2>Catatan</h2>
-                    <span>Semua iCloud</span>
+                    <span>Cloud Database</span>
                 </div>
             </div>
-            <div class="header-right notes-color" onclick="addNote()">
-                <i class="fa-regular fa-pen-to-square"></i>
-            </div>
+            <div class="header-btn" onclick="addNote()">✍️</div>
         </div>
         <div class="card-body">
             <div class="list-container" id="notesContainer">
-                <div class="item-meta">Memuat catatan...</div>
+                <div class="item-meta">Menghubungkan ke server...</div>
             </div>
         </div>
-        <div class="card-footer">...</div>
+        <div class="card-footer" id="notesFooter">0 Catatan</div>
     </div>
 
     <div class="icloud-card">
         <div class="card-header">
             <div class="header-left">
-                <div class="app-icon drive-icon"><i class="fa-solid fa-folder-open"></i></div>
+                <div class="app-icon drive-icon">📁</div>
                 <div class="app-info">
                     <h2>Drive</h2>
-                    <span>Terbaru</span>
+                    <span>Penyimpanan File</span>
                 </div>
             </div>
         </div>
         <div class="card-body drive-content" onclick="document.getElementById('fileInput').click()">
-            <i class="fa-solid fa-cloud-arrow-up"></i>
-            <p id="uploadStatus">Unggah file pertama Anda</p>
+            <div class="cloud-emoji">☁️</div>
+            <p id="uploadStatus">Klik untuk Unggah Berkas</p>
             <input type="file" id="fileInput" style="display: none;" onchange="handleFileUpload(event)">
         </div>
-        <div class="card-footer">...</div>
+        <div class="card-footer">Bucket: 'documents'</div>
     </div>
 
     <div class="icloud-card">
         <div class="card-header">
             <div class="header-left">
-                <div class="app-icon bookmark-icon"><i class="fa-solid fa-bookmark"></i></div>
+                <div class="app-icon bookmark-icon">🔖</div>
                 <div class="app-info">
                     <h2>Bookmark</h2>
-                    <span>Tautan Tersimpan</span>
+                    <span>Link Favorit</span>
                 </div>
             </div>
-            <div class="header-right bookmark-color" onclick="addBookmark()">
-                <i class="fa-solid fa-plus"></i>
-            </div>
+            <div class="header-btn" onclick="addBookmark()">➕</div>
         </div>
         <div class="card-body">
             <div class="list-container" id="bookmarkContainer">
-                <div class="item-meta">Memuat bookmark...</div>
+                <div class="item-meta">Menghubungkan ke server...</div>
             </div>
         </div>
-        <div class="card-footer">...</div>
+        <div class="card-footer" id="bookmarkFooter">0 Tautan</div>
     </div>
 
     <div class="icloud-card">
         <div class="card-header">
             <div class="header-left">
-                <div class="app-icon calc-icon"><i class="fa-solid fa-calculator"></i></div>
+                <div class="app-icon calc-icon">🧮</div>
                 <div class="app-info">
                     <h2>Kalkulator</h2>
-                    <span>Instan</span>
+                    <span>Sistem Instan</span>
                 </div>
             </div>
         </div>
@@ -295,7 +280,7 @@
                     <button class="calc-btn btn-operator" onclick="pressCalc('+')">+</button>
                     
                     <button class="calc-btn" onclick="pressCalc('4')">4</button>
-                    <button class="calc-btn" onclick="pressCalc('5')">6</button>
+                    <button class="calc-btn" onclick="pressCalc('5')">5</button>
                     <button class="calc-btn" onclick="pressCalc('6')">6</button>
                     <button class="calc-btn btn-equal" style="grid-row: span 2; height: 100%;" onclick="calculateResult()">=</button>
                     
@@ -313,35 +298,51 @@
 </div>
 
 <script>
-    // Inisialisasi Kredensial Proyek Supabase Anda secara Otomatis
     const SUPABASE_URL = "https://awlxjzfadktcthbumxle.supabase.co"; 
     const SUPABASE_ANON_KEY = "EyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3bHhqemZhZGt0Y3RoYnVteGxlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3ODU3NzgsImV4cCI6MjA5OTM2MTc3OH0.ktRLTXfsYmzb5RH8qKci0FgENkqqVG9atz5sHls9RXI";
 
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // Proteksi inisialisasi library Supabase
+    let supabase;
+    try {
+        supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    } catch(e) {
+        document.getElementById('notesContainer').innerHTML = "<div class='item-meta' style='color:red;'>Library Supabase gagal dimuat. Periksa koneksi internet Anda.</div>";
+        document.getElementById('bookmarkContainer').innerHTML = "<div class='item-meta' style='color:red;'>Library Supabase gagal dimuat.</div>";
+    }
 
     window.onload = function() {
-        loadNotes();
-        loadBookmarks();
+        if(supabase) {
+            loadNotes();
+            loadBookmarks();
+        }
     };
 
-    // FUNGSI CATATAN
+    // ====== FUNGSI CATATAN ======
     async function loadNotes() {
         const container = document.getElementById('notesContainer');
+        const footer = document.getElementById('notesFooter');
         try {
             let { data: catatan, error } = await supabase.from('catatan').select('*').order('id', { ascending: false }); 
             if (error) throw error;
             if (catatan && catatan.length > 0) {
+                footer.innerText = `${catatan.length} Catatan`;
                 container.innerHTML = catatan.map(note => `
                     <div class="item-row">
                         <div class="item-title">${note.title || 'Tanpa Judul'}</div>
-                        <div class="item-meta">${note.date_label || ''} <span>${note.description || ''}</span></div>
+                        <div class="item-meta">${note.date_label || ''} - <span>${note.description || ''}</span></div>
                     </div>
                 `).join('');
-            } else { container.innerHTML = '<div class="item-meta">Tidak ada catatan.</div>'; }
-        } catch (error) { container.innerHTML = '<div class="item-meta" style="color:#ef4444;">Gagal memuat data.</div>'; }
+            } else { 
+                container.innerHTML = '<div class="item-meta">Tidak ada catatan ditemukan.</div>'; 
+                footer.innerText = '0 Catatan';
+            }
+        } catch (error) { 
+            container.innerHTML = `<div class="item-meta" style="color:#ef4444;">Error: ${error.message}. Pastikan tabel 'catatan' sudah dibuat dan RLS dimatikan.</div>`; 
+        }
     }
 
     async function addNote() {
+        if(!supabase) return;
         const title = prompt("Masukkan judul catatan:");
         if (!title) return;
         const description = prompt("Masukkan isi catatan:");
@@ -351,11 +352,12 @@
             const { error } = await supabase.from('catatan').insert([{ title, description, date_label }]);
             if (error) throw error;
             loadNotes();
-        } catch (error) { alert("Gagal: " + error.message); }
+        } catch (error) { alert("Gagal Menyimpan: " + error.message); }
     }
 
-    // FUNGSI DRIVE
+    // ====== FUNGSI DRIVE ======
     async function handleFileUpload(event) {
+        if(!supabase) return;
         const file = event.target.files[0];
         if (!file) return;
         const statusText = document.getElementById('uploadStatus');
@@ -365,31 +367,39 @@
             const filePath = `uploads/${Math.random()}.${fileExt}`;
             let { error } = await supabase.storage.from('documents').upload(filePath, file);
             if (error) throw error;
-            statusText.innerText = `Berhasil: ${file.name}`;
+            statusText.innerText = `✅ Berhasil: ${file.name}`;
         } catch (error) {
-            statusText.innerText = "Gagal mengunggah file.";
-            alert("Pastikan bucket 'documents' sudah dibuat di Supabase Storage.");
+            statusText.innerText = "❌ Gagal mengunggah file.";
+            alert("Error Storage: " + error.message + "\nPastikan Bucket bernama 'documents' sudah dibuat di menu Storage Supabase.");
         }
     }
 
-    // FUNGSI BOOKMARK
+    // ====== FUNGSI BOOKMARK ======
     async function loadBookmarks() {
         const container = document.getElementById('bookmarkContainer');
+        const footer = document.getElementById('bookmarkFooter');
         try {
             let { data: bookmarks, error } = await supabase.from('bookmarks').select('*').order('id', { ascending: false });
             if (error) throw error;
             if (bookmarks && bookmarks.length > 0) {
+                footer.innerText = `${bookmarks.length} Tautan`;
                 container.innerHTML = bookmarks.map(bk => `
                     <div class="item-row">
                         <div class="item-title">${bk.nama || 'Tautan Tanpa Nama'}</div>
                         <div class="item-meta"><a href="${bk.url}" target="_blank" class="item-link">${bk.url}</a></div>
                     </div>
                 `).join('');
-            } else { container.innerHTML = '<div class="item-meta">Tidak ada bookmark.</div>'; }
-        } catch (error) { container.innerHTML = '<div class="item-meta" style="color:#ef4444;">Gagal memuat bookmark.</div>'; }
+            } else { 
+                container.innerHTML = '<div class="item-meta">Tidak ada bookmark ditemukan.</div>'; 
+                footer.innerText = '0 Tautan';
+            }
+        } catch (error) { 
+            container.innerHTML = `<div class="item-meta" style="color:#ef4444;">Error: ${error.message}. Pastikan tabel 'bookmarks' sudah dibuat dan RLS dimatikan.</div>`; 
+        }
     }
 
     async function addBookmark() {
+        if(!supabase) return;
         const nama = prompt("Masukkan nama/judul website:");
         if (!nama) return;
         let url = prompt("Masukkan URL website (contoh: google.com):");
@@ -399,10 +409,10 @@
             const { error } = await supabase.from('bookmarks').insert([{ nama, url }]);
             if (error) throw error;
             loadBookmarks();
-        } catch (error) { alert("Gagal: " + error.message); }
+        } catch (error) { alert("Gagal Menyimpan: " + error.message); }
     }
 
-    // FUNGSI KALKULATOR
+    // ====== FUNGSI KALKULATOR ======
     let calcExpression = "";
     function pressCalc(val) {
         const screen = document.getElementById('calcScreen');
