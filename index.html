@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>My Dashboard Grid</title>
 
-<!-- Menggunakan CDN alternatif unpkg yang sangat ramah terhadap mobile browser -->
+<!-- Menggunakan CDN unpkg yang stabil untuk mobile browser -->
 <script src="https://unpkg.com/@supabase/supabase-js@2.39.8/dist/umd/supabase.js"></script>
 
 <style>
@@ -307,23 +307,30 @@
     var clientCloud = null;
 
     window.onload = function() {
-        // Metode inisialisasi yang dipaksa lolos dari kekatutan cakupan jendela Safari
         try {
+            // Konfigurasi ekstra global header untuk memaksa otentikasi anonim bypass isu token expired browser
+            const options = {
+                auth: {
+                    persistSession: false,
+                    autoRefreshToken: false,
+                    detectSessionInUrl: false
+                }
+            };
+            
             if (window.supabase && typeof window.supabase.createClient === 'function') {
-                clientCloud = window.supabase.createClient(url_db, key_db);
+                clientCloud = window.supabase.createClient(url_db, key_db, options);
             } else if (typeof supabase !== 'undefined' && supabase.createClient) {
-                clientCloud = supabase.createClient(url_db, key_db);
+                clientCloud = supabase.createClient(url_db, key_db, options);
             }
         } catch (e) {
-            alert("Gagal memuat library sistem: " + e.message);
+            console.error(e);
         }
 
         if (clientCloud) {
             loadNotes();
             loadBookmarks();
         } else {
-            document.getElementById('notesContainer').innerHTML = "<div class='item-meta' style='color:#ef4444;'>Gagal menginisialisasi skrip database. Harap refresh halaman.</div>";
-            document.getElementById('bookmarkContainer').innerHTML = "<div class='item-meta' style='color:#ef4444;'>Gagal memuat sistem.</div>";
+            document.getElementById('notesContainer').innerHTML = "<div class='item-meta' style='color:#ef4444;'>Gagal memuat sistem basis data.</div>";
         }
     };
 
@@ -348,7 +355,7 @@
                 footer.innerText = '0 Catatan';
             }
         } catch (error) { 
-            container.innerHTML = `<div class="item-meta" style="color:#ef4444;">Koneksi gagal: ${error.message}</div>`; 
+            container.innerHTML = `<div class="item-meta" style="color:#ef4444;">Pesan sistem: ${error.message}</div>`; 
         }
     }
 
@@ -406,7 +413,7 @@
                 footer.innerText = '0 Tautan';
             }
         } catch (error) { 
-            container.innerHTML = `<div class="item-meta" style="color:#ef4444;">Koneksi gagal: ${error.message}</div>`; 
+            container.innerHTML = `<div class="item-meta" style="color:#ef4444;">Pesan sistem: ${error.message}</div>`; 
         }
     }
 
