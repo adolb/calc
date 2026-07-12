@@ -1,231 +1,424 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aplikasi Catatan & Upload Supabase</title>
-    <!-- Panggil Library Supabase via CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            max-width: 600px; 
-            margin: 40px auto; 
-            padding: 0 20px; 
-            background-color: #f9f9f9;
-            color: #333;
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>My iCloud Style Dashboard Grid</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+        background: linear-gradient(135deg, #3b82f6, #60a5fa, #93c5fd);
+        min-height: 100vh;
+        padding: 24px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    /* Grid Layout Utama */
+    .dashboard-grid {
+        width: 100%;
+        max-width: 960px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+    }
+
+    @media (max-width: 768px) {
+        .dashboard-grid {
+            grid-template-columns: 1fr;
         }
-        .container {
-            background: white;
-            padding: 25px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        .form-group { 
-            margin-bottom: 15px; 
-        }
-        label {
-            font-weight: bold;
-            display: block;
-            margin-bottom: 5px;
-        }
-        input[type="text"], input[type="file"] { 
-            width: 100%; 
-            padding: 10px; 
-            margin-top: 5px; 
-            box-sizing: border-box; 
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        button { 
-            padding: 12px 15px; 
-            background-color: #24b47e; 
-            color: white; 
-            border: none; 
-            border-radius: 4px;
-            cursor: pointer; 
-            width: 100%; 
-            font-size: 16px; 
-            font-weight: bold;
-            margin-top: 10px; 
-        }
-        button:hover { 
-            background-color: #1c8c62; 
-        }
-        h2 {
-            margin-top: 30px;
-            border-bottom: 2px solid #24b47e;
-            padding-bottom: 5px;
-        }
-        .note-item { 
-            background: #fff;
-            border: 1px solid #eee;
-            border-left: 5px solid #24b47e;
-            padding: 15px; 
-            margin-bottom: 15px;
-            border-radius: 4px;
-        }
-        .note-item h3 { 
-            margin: 0 0 5px 0; 
-            color: #111;
-        }
-        .note-item img { 
-            max-width: 100%; 
-            height: auto;
-            display: block; 
-            margin-top: 10px; 
-            border-radius: 4px; 
-            border: 1px solid #ddd;
-        }
-        .note-item small { 
-            color: #666; 
-            font-size: 12px;
-        }
-        .download-link {
-            display: inline-block;
-            margin-top: 10px;
-            color: #24b47e;
-            text-decoration: none;
-            font-weight: bold;
-        }
-        .download-link:hover {
-            text-decoration: underline;
-        }
-    </style>
+    }
+
+    /* Gaya Kartu Utama ala iCloud */
+    .icloud-card {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-radius: 24px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        height: 320px;
+    }
+
+    /* Bagian Header Kartu */
+    .card-header {
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: rgba(255, 255, 255, 0.4);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .app-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    }
+
+    .notes-icon { background: #fef9c3; color: #ca8a04; }
+    .drive-icon { background: #e0f2fe; color: #0284c7; }
+    .bookmark-icon { background: #dcfce7; color: #16a34a; }
+    .calc-icon { background: #fee2e2; color: #dc2626; }
+
+    .app-info h2 {
+        font-size: 16px;
+        font-weight: 600;
+        color: #1e293b;
+    }
+
+    .app-info span {
+        font-size: 12px;
+        color: #64748b;
+    }
+
+    .header-right {
+        font-size: 16px;
+        cursor: pointer;
+        transition: opacity 0.2s;
+    }
+    .header-right:hover { opacity: 0.7; }
+    .notes-color { color: #ca8a04; }
+    .bookmark-color { color: #16a34a; }
+
+    /* Bagian Konten Kartu */
+    .card-body {
+        background: #ffffff;
+        padding: 20px;
+        flex: 1;
+        overflow-y: auto;
+    }
+
+    .list-container {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .item-row {
+        padding: 10px 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .item-row:last-child { border-bottom: none; }
+
+    .item-title {
+        font-size: 14px;
+        font-weight: 500;
+        color: #1e293b;
+    }
+    .item-meta {
+        font-size: 12px;
+        color: #94a3b8;
+        margin-top: 2px;
+    }
+    .item-link {
+        color: #3b82f6;
+        text-decoration: none;
+    }
+    .item-link:hover { text-decoration: underline; }
+
+    /* DRIVE */
+    .drive-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: #64748b;
+        gap: 12px;
+        text-align: center;
+        cursor: pointer;
+    }
+    .drive-content i { font-size: 48px; color: #3b82f6; }
+
+    /* KALKULATOR */
+    .calc-box {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        height: 100%;
+    }
+    .calc-screen {
+        width: 100%;
+        background: #f1f5f9;
+        border: none;
+        padding: 12px;
+        font-size: 22px;
+        text-align: right;
+        border-radius: 12px;
+        color: #1e293b;
+        font-weight: 600;
+    }
+    .calc-buttons {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+        flex: 1;
+    }
+    .calc-btn {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        font-size: 16px;
+        font-weight: 600;
+        color: #334155;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.1s;
+    }
+    .calc-btn:active { background: #cbd5e1; }
+    .btn-operator { background: #ffedd5; color: #ea580c; }
+    .btn-equal { background: #3b82f6; color: white; }
+    .btn-equal:active { background: #1d4ed8; }
+
+    .card-footer {
+        padding: 6px 20px 10px 20px;
+        background: #ffffff;
+        font-size: 16px;
+        color: #64748b;
+        font-weight: bold;
+        border-top: 1px solid #f8fafc;
+    }
+</style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>Catatan & File Saya</h1>
+<div class="dashboard-grid">
 
-        <!-- Form Input -->
-        <div class="form-group">
-            <label for="input-judul">Judul Catatan:</label>
-            <input type="text" id="input-judul" placeholder="Tulis judul catatan...">
+    <div class="icloud-card">
+        <div class="card-header">
+            <div class="header-left">
+                <div class="app-icon notes-icon"><i class="fa-solid fa-note-sticky"></i></div>
+                <div class="app-info">
+                    <h2>Catatan</h2>
+                    <span>Semua iCloud</span>
+                </div>
+            </div>
+            <div class="header-right notes-color" onclick="addNote()">
+                <i class="fa-regular fa-pen-to-square"></i>
+            </div>
         </div>
-        <div class="form-group">
-            <label for="input-file">Pilih File/Gambar (Opsional):</label>
-            <input type="file" id="input-file">
+        <div class="card-body">
+            <div class="list-container" id="notesContainer">
+                <div class="item-meta">Memuat catatan...</div>
+            </div>
         </div>
-        <button onclick="simpanSemua()">Simpan Catatan & File</button>
-
-        <h2>Daftar Catatan</h2>
-        <div id="daftar-catatan">Memuat catatan...</div>
+        <div class="card-footer">...</div>
     </div>
 
-    <script>
-        // Konfigurasi Supabase menggunakan kredensial proyek Anda
-        const SUPABASE_URL = 'https://awlxjzfadktcthbumxle.supabase.co';
-        
-        // SUDAH DIPERBAIKI: Memakai token JWT asli yang Anda kirimkan
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3bHhqemZhZGt0Y3RoYnVteGxlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3ODU3NzgsImV4cCI6MjA5OTM2MTc3OH0.ktRLTXfsYmzb5RH8qKci0FgENkqqVG9atz5sHls9RXI';
-        
-        // Inisialisasi Klien Supabase
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    <div class="icloud-card">
+        <div class="card-header">
+            <div class="header-left">
+                <div class="app-icon drive-icon"><i class="fa-solid fa-folder-open"></i></div>
+                <div class="app-info">
+                    <h2>Drive</h2>
+                    <span>Terbaru</span>
+                </div>
+            </div>
+        </div>
+        <div class="card-body drive-content" onclick="document.getElementById('fileInput').click()">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+            <p id="uploadStatus">Unggah file pertama Anda</p>
+            <input type="file" id="fileInput" style="display: none;" onchange="handleFileUpload(event)">
+        </div>
+        <div class="card-footer">...</div>
+    </div>
 
-        // 1. Fungsi Mengambil Catatan dari Tabel 'Notes' dan Menampilkannya
-        async function ambilCatatan() {
-            const wadahCatatan = document.getElementById('daftar-catatan');
-            
-            const { data, error } = await supabaseClient
-                .from('Notes')
-                .select('*')
-                .order('created_at', { ascending: false }); // Urutkan dari yang terbaru
+    <div class="icloud-card">
+        <div class="card-header">
+            <div class="header-left">
+                <div class="app-icon bookmark-icon"><i class="fa-solid fa-bookmark"></i></div>
+                <div class="app-info">
+                    <h2>Bookmark</h2>
+                    <span>Tautan Tersimpan</span>
+                </div>
+            </div>
+            <div class="header-right bookmark-color" onclick="addBookmark()">
+                <i class="fa-solid fa-plus"></i>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="list-container" id="bookmarkContainer">
+                <div class="item-meta">Memuat bookmark...</div>
+            </div>
+        </div>
+        <div class="card-footer">...</div>
+    </div>
 
-            if (error) {
-                console.error('Error ambil data:', error);
-                wadahCatatan.innerHTML = '<p style="color:red;">Gagal memuat catatan. Periksa kembali tabel Notes Anda.</p>';
-                return;
-            }
-            if (data.length === 0) {
-                wadahCatatan.innerHTML = '<p>Belum ada catatan.</p>';
-                return;
-            }
+    <div class="icloud-card">
+        <div class="card-header">
+            <div class="header-left">
+                <div class="app-icon calc-icon"><i class="fa-solid fa-calculator"></i></div>
+                <div class="app-info">
+                    <h2>Kalkulator</h2>
+                    <span>Instan</span>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="calc-box">
+                <input type="text" class="calc-screen" id="calcScreen" readonly value="0">
+                <div class="calc-buttons">
+                    <button class="calc-btn btn-operator" onclick="clearCalc()">C</button>
+                    <button class="calc-btn btn-operator" onclick="pressCalc('/')">/</button>
+                    <button class="calc-btn btn-operator" onclick="pressCalc('*')">x</button>
+                    <button class="calc-btn btn-operator" onclick="pressCalc('-')">-</button>
+                    
+                    <button class="calc-btn" onclick="pressCalc('7')">7</button>
+                    <button class="calc-btn" onclick="pressCalc('8')">8</button>
+                    <button class="calc-btn" onclick="pressCalc('9')">9</button>
+                    <button class="calc-btn btn-operator" onclick="pressCalc('+')">+</button>
+                    
+                    <button class="calc-btn" onclick="pressCalc('4')">4</button>
+                    <button class="calc-btn" onclick="pressCalc('5')">6</button>
+                    <button class="calc-btn" onclick="pressCalc('6')">6</button>
+                    <button class="calc-btn btn-equal" style="grid-row: span 2; height: 100%;" onclick="calculateResult()">=</button>
+                    
+                    <button class="calc-btn" onclick="pressCalc('1')">1</button>
+                    <button class="calc-btn" onclick="pressCalc('2')">2</button>
+                    <button class="calc-btn" onclick="pressCalc('3')">3</button>
+                    
+                    <button class="calc-btn" style="grid-column: span 2;" onclick="pressCalc('0')">0</button>
+                    <button class="calc-btn" onclick="pressCalc('.')">.</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-            wadahCatatan.innerHTML = '';
-            data.forEach(note => {
-                const item = document.createElement('div');
-                item.className = 'note-item';
-                
-                // Cek ekstensi file jika ada file_url di database Anda
-                let tagFile = '';
-                if (note.file_url) {
-                    if (note.file_url.match(/\.(jpeg|jpg|gif|png|webp)$/i)) {
-                        tagFile = `<img src="${note.file_url}" alt="Gambar Catatan">`;
-                    } else {
-                        tagFile = `<br><a class="download-link" href="${note.file_url}" target="_blank">📄 Lihat Lampiran Dokumen</a>`;
-                    }
-                }
+</div>
 
-                // Menggunakan kolom 'tittle' (dua huruf t) sesuai struktur tabel Anda
-                item.innerHTML = `
-                    <h3>${note.tittle || '(Tanpa Judul)'}</h3>
-                    <small>Dibuat: ${new Date(note.created_at).toLocaleString('id-ID')}</small>
-                    ${tagFile}
-                `;
-                wadahCatatan.appendChild(item);
-            });
+<script>
+    // Inisialisasi Kredensial Proyek Supabase Anda secara Otomatis
+    const SUPABASE_URL = "https://awlxjzfadktcthbumxle.supabase.co"; 
+    const SUPABASE_ANON_KEY = "EyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3bHhqemZhZGt0Y3RoYnVteGxlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3ODU3NzgsImV4cCI6MjA5OTM2MTc3OH0.ktRLTXfsYmzb5RH8qKci0FgENkqqVG9atz5sHls9RXI";
+
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    window.onload = function() {
+        loadNotes();
+        loadBookmarks();
+    };
+
+    // FUNGSI CATATAN
+    async function loadNotes() {
+        const container = document.getElementById('notesContainer');
+        try {
+            let { data: catatan, error } = await supabase.from('catatan').select('*').order('id', { ascending: false }); 
+            if (error) throw error;
+            if (catatan && catatan.length > 0) {
+                container.innerHTML = catatan.map(note => `
+                    <div class="item-row">
+                        <div class="item-title">${note.title || 'Tanpa Judul'}</div>
+                        <div class="item-meta">${note.date_label || ''} <span>${note.description || ''}</span></div>
+                    </div>
+                `).join('');
+            } else { container.innerHTML = '<div class="item-meta">Tidak ada catatan.</div>'; }
+        } catch (error) { container.innerHTML = '<div class="item-meta" style="color:#ef4444;">Gagal memuat data.</div>'; }
+    }
+
+    async function addNote() {
+        const title = prompt("Masukkan judul catatan:");
+        if (!title) return;
+        const description = prompt("Masukkan isi catatan:");
+        const now = new Date();
+        const date_label = `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear().toString().substring(2)}`;
+        try {
+            const { error } = await supabase.from('catatan').insert([{ title, description, date_label }]);
+            if (error) throw error;
+            loadNotes();
+        } catch (error) { alert("Gagal: " + error.message); }
+    }
+
+    // FUNGSI DRIVE
+    async function handleFileUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const statusText = document.getElementById('uploadStatus');
+        statusText.innerText = `Mengunggah: ${file.name}...`;
+        try {
+            const fileExt = file.name.split('.').pop();
+            const filePath = `uploads/${Math.random()}.${fileExt}`;
+            let { error } = await supabase.storage.from('documents').upload(filePath, file);
+            if (error) throw error;
+            statusText.innerText = `Berhasil: ${file.name}`;
+        } catch (error) {
+            statusText.innerText = "Gagal mengunggah file.";
+            alert("Pastikan bucket 'documents' sudah dibuat di Supabase Storage.");
         }
+    }
 
-        // 2. Fungsi Mengunggah File ke Storage dan Menyimpan Data ke Tabel 'Notes'
-        async function simpanSemua() {
-            const inputJudul = document.getElementById('input-judul');
-            const inputFile = document.getElementById('input-file');
-            const teksJudul = inputJudul.value.trim();
+    // FUNGSI BOOKMARK
+    async function loadBookmarks() {
+        const container = document.getElementById('bookmarkContainer');
+        try {
+            let { data: bookmarks, error } = await supabase.from('bookmarks').select('*').order('id', { ascending: false });
+            if (error) throw error;
+            if (bookmarks && bookmarks.length > 0) {
+                container.innerHTML = bookmarks.map(bk => `
+                    <div class="item-row">
+                        <div class="item-title">${bk.nama || 'Tautan Tanpa Nama'}</div>
+                        <div class="item-meta"><a href="${bk.url}" target="_blank" class="item-link">${bk.url}</a></div>
+                    </div>
+                `).join('');
+            } else { container.innerHTML = '<div class="item-meta">Tidak ada bookmark.</div>'; }
+        } catch (error) { container.innerHTML = '<div class="item-meta" style="color:#ef4444;">Gagal memuat bookmark.</div>'; }
+    }
 
-            if (!teksJudul) {
-                alert('Tolong isi judul catatan terlebih dahulu!');
-                return;
-            }
+    async function addBookmark() {
+        const nama = prompt("Masukkan nama/judul website:");
+        if (!nama) return;
+        let url = prompt("Masukkan URL website (contoh: google.com):");
+        if (!url) return;
+        if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+        try {
+            const { error } = await supabase.from('bookmarks').insert([{ nama, url }]);
+            if (error) throw error;
+            loadBookmarks();
+        } catch (error) { alert("Gagal: " + error.message); }
+    }
 
-            let urlFileTerupload = null;
+    // FUNGSI KALKULATOR
+    let calcExpression = "";
+    function pressCalc(val) {
+        const screen = document.getElementById('calcScreen');
+        if (screen.value === "0" && !isNaN(val)) { calcExpression = val; } else { calcExpression += val; }
+        screen.value = calcExpression;
+    }
+    function clearCalc() { calcExpression = ""; document.getElementById('calcScreen').value = "0"; }
+    function calculateResult() {
+        const screen = document.getElementById('calcScreen');
+        try {
+            const result = new Function(`return ${calcExpression}`)();
+            screen.value = result;
+            calcExpression = result.toString();
+        } catch (error) { screen.value = "Error"; calcExpression = ""; }
+    }
+</script>
 
-            // Jika user memilih file, upload ke bucket bernama 'files'
-            if (inputFile.files.length > 0) {
-                const file = inputFile.files[0];
-                const namaFileUnik = `${Date.now()}_${file.name}`; // Mencegah nama file duplikat
-
-                const { data: uploadData, error: uploadError } = await supabaseClient.storage
-                    .from('files')
-                    .upload(namaFileUnik, file);
-
-                if (uploadError) {
-                    console.error('Gagal upload file:', uploadError);
-                    alert('Gagal mengunggah file: ' + uploadError.message + '\n\nApakah bucket bernama "files" sudah dibuat di Supabase?');
-                    return; 
-                }
-
-                // Dapatkan URL publik dari file yang sukses di-upload
-                const { data: urlData } = supabaseClient.storage
-                    .from('files')
-                    .getPublicUrl(namaFileUnik);
-                
-                urlFileTerupload = urlData.publicUrl;
-            }
-
-            // Masukkan data baru ke tabel 'Notes'
-            const { error: insertError } = await supabaseClient
-                .from('Notes')
-                .insert([
-                    { 
-                        tittle: teksJudul,        // Kolom judul (tittle)
-                        file_url: urlFileTerupload // Kolom link file
-                    }
-                ]);
-
-            if (insertError) {
-                console.error('Gagal insert data:', insertError);
-                alert('Gagal menyimpan catatan: ' + insertError.message + '\n\nPastikan kolom "tittle" (dua huruf t) dan "file_url" sudah ada di tabel Notes.');
-            } else {
-                alert('Catatan berhasil disimpan!');
-                inputJudul.value = ''; // Reset input text
-                inputFile.value = '';  // Reset input file
-                ambilCatatan();        // Segarkan list catatan otomatis
-            }
-        }
-
-        // Jalankan fungsi saat pertama kali halaman web dibuka
-        window.onload = ambilCatatan;
-    </script>
 </body>
 </html>
