@@ -116,7 +116,9 @@
     <script>
         // Konfigurasi Supabase menggunakan kredensial proyek Anda
         const SUPABASE_URL = 'https://awlxjzfadktcthbumxle.supabase.co';
-        const SUPABASE_KEY = 'Sb_publishable_LnE9IH5KKDzdV-gj9tIb6w_uOGVZi4o';
+        
+        // SUDAH DIPERBAIKI: Memakai token JWT asli yang Anda kirimkan
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3bHhqemZhZGt0Y3RoYnVteGxlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3ODU3NzgsImV4cCI6MjA5OTM2MTc3OH0.ktRLTXfsYmzb5RH8qKci0FgENkqqVG9atz5sHls9RXI';
         
         // Inisialisasi Klien Supabase
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -132,7 +134,7 @@
 
             if (error) {
                 console.error('Error ambil data:', error);
-                wadahCatatan.innerHTML = '<p style="color:red;">Gagal memuat catatan.</p>';
+                wadahCatatan.innerHTML = '<p style="color:red;">Gagal memuat catatan. Periksa kembali tabel Notes Anda.</p>';
                 return;
             }
             if (data.length === 0) {
@@ -189,7 +191,7 @@
 
                 if (uploadError) {
                     console.error('Gagal upload file:', uploadError);
-                    alert('Gagal mengunggah file: ' + uploadError.message);
+                    alert('Gagal mengunggah file: ' + uploadError.message + '\n\nApakah bucket bernama "files" sudah dibuat di Supabase?');
                     return; 
                 }
 
@@ -207,13 +209,13 @@
                 .insert([
                     { 
                         tittle: teksJudul,        // Kolom judul (tittle)
-                        file_url: urlFileTerupload // Kolom link file (pastikan sudah ditambahkan di tabel)
+                        file_url: urlFileTerupload // Kolom link file
                     }
                 ]);
 
             if (insertError) {
                 console.error('Gagal insert data:', insertError);
-                alert('Gagal menyimpan catatan: ' + insertError.message);
+                alert('Gagal menyimpan catatan: ' + insertError.message + '\n\nPastikan kolom "tittle" (dua huruf t) dan "file_url" sudah ada di tabel Notes.');
             } else {
                 alert('Catatan berhasil disimpan!');
                 inputJudul.value = ''; // Reset input text
