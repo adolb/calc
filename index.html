@@ -2,7 +2,14 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
+<!-- Kunci Viewport Anti-Zoom -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<!-- Meta Tag Fullscreen untuk iOS Safari (Add to Homescreen) -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="iCloud Dashboard">
+
 <title>My iCloud Style Dashboard Grid</title>
 
 <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
@@ -19,7 +26,8 @@
     body {
         background: linear-gradient(135deg, #3b82f6, #60a5fa, #93c5fd);
         min-height: 100vh;
-        padding: 24px;
+        /* Padding atas disesuaikan untuk mode iOS Fullscreen (notch/safe area) */
+        padding: calc(24px + env(safe-area-inset-top)) 24px 24px 24px;
         display: flex;
         justify-content: center;
         align-items: center;
@@ -39,7 +47,7 @@
             padding: 0;
         }
         body {
-            padding: 12px;
+            padding: calc(16px + env(safe-area-inset-top)) 12px 12px 12px;
         }
     }
 
@@ -55,7 +63,6 @@
         height: 320px;
     }
 
-    /* Layout adaptif untuk menampung kalkulator OTA */
     .icloud-card.ota-card-layout {
         height: auto;
         min-height: 320px;
@@ -131,24 +138,36 @@
     .list-container {
         display: flex;
         flex-direction: column;
+        width: 100%;
     }
 
+    /* FIX: Layout Row Supaya Teks Panjang Tidak Merusak Tampilan */
     .item-row {
         padding: 10px 0;
         border-bottom: 1px solid #f1f5f9;
         cursor: pointer;
         transition: background 0.2s;
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        min-width: 0; /* Mengaktifkan pembatasan ukuran flex child */
     }
     .item-row:hover {
         background: rgba(0, 0, 0, 0.02);
     }
     .item-row:last-child { border-bottom: none; }
 
+    /* FIX: Memotong nama file memanjang dengan titik-titik (...) */
     .item-title {
         font-size: 14px;
         font-weight: 500;
         color: #1e293b;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        width: 100%;
     }
+    
     .item-meta {
         font-size: 12px;
         color: #94a3b8;
@@ -156,6 +175,7 @@
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        width: 100%;
     }
     .item-link {
         color: #3b82f6;
@@ -175,11 +195,10 @@
     }
     .drive-upload-zone i { font-size: 24px; color: #3b82f6; margin-bottom: 4px; display: block;}
 
-    /* Modifikasi Font size ke 16px untuk mencegah Auto-Zoom Mobile */
     .ota-select, .ota-input {
         width: 100%;
         padding: 10px 12px;
-        font-size: 16px; /* Mencegah auto-zoom */
+        font-size: 16px;
         border: 1px solid #cbd5e1;
         border-radius: 10px;
         background: #f8fafc;
@@ -187,7 +206,7 @@
         outline: none;
         margin-top: 6px;
         margin-bottom: 12px;
-        -webkit-appearance: none; /* Mencegah style bawaan iOS */
+        -webkit-appearance: none;
     }
     .ota-input-row { display: flex; gap: 8px; align-items: center; margin-top: 6px; margin-bottom: 12px; }
     .ota-input-row input { flex: 1; margin: 0; }
@@ -215,7 +234,6 @@
 
     .card-footer { padding: 6px 20px 10px 20px; background: #ffffff; font-size: 13px; color: #94a3b8; border-top: 1px solid #f8fafc; }
 
-    /* Text Converter Input anti-zoom */
     #textConverterInput {
         width: 100%; 
         flex: 1; 
@@ -223,7 +241,7 @@
         border-radius: 12px; 
         padding: 12px; 
         resize: none; 
-        font-size: 16px; /* Mencegah auto-zoom */
+        font-size: 16px; 
         outline: none; 
         color: #1e293b; 
         font-family: inherit;
@@ -269,7 +287,7 @@
     .email-input-subject, .email-textarea-body {
         width: 100%;
         padding: 10px 14px;
-        font-size: 16px; /* Mencegah auto-zoom */
+        font-size: 16px;
         border: 1px solid #cbd5e1;
         border-radius: 10px;
         color: #1e293b;
@@ -499,6 +517,21 @@
         loadDriveFiles();
         loadBookmarks();
         initOTAGrid();
+        
+        // Memastikan internal link tetap berjalan dalam mode standalone app (anti mental ke Safari biasa)
+        if (("standalone" in window.navigator) && window.navigator.standalone) {
+            var noddy, remotes = false;
+            document.addEventListener('click', function(event) {
+                noddy = event.target;
+                while (noddy.nodeName !== "A" && noddy.nodeName !== "HTML") {
+                    noddy = noddy.parentNode;
+                }
+                if ('href' in noddy && noddy.href.indexOf('http') !== -1 && (noddy.href.indexOf(document.location.host) !== -1 || remotes)) {
+                    event.preventDefault();
+                    document.location.href = noddy.href;
+                }
+            }, false);
+        }
     };
 
     function escapeHTML(str) {
@@ -589,12 +622,16 @@
         const container = document.getElementById('driveContainer');
         const { data: files } = await supabaseClient.storage.from('documents').list('uploads');
         if (files) {
-            container.innerHTML = files.map(file => `
-                <div class="item-row">
-                    <div class="item-title">${escapeHTML(file.name.substring(file.name.indexOf('_') + 1))}</div>
-                    <div class="item-meta"><a href="${supabaseClient.storage.from('documents').getPublicUrl(`uploads/${file.name}`).data.publicUrl}" target="_blank" class="item-link">Buka File</a></div>
-                </div>
-            `).join('');
+            container.innerHTML = files.map(file => {
+                let cleanName = file.name.substring(file.name.indexOf('_') + 1);
+                let publicUrl = supabaseClient.storage.from('documents').getPublicUrl(`uploads/${file.name}`).data.publicUrl;
+                return `
+                    <div class="item-row">
+                        <div class="item-title" title="${escapeHTML(cleanName)}">${escapeHTML(cleanName)}</div>
+                        <div class="item-meta"><a href="${publicUrl}" target="_blank" class="item-link">Buka File</a></div>
+                    </div>
+                `;
+            }).join('');
             document.getElementById('driveFooter').innerText = `${files.length} Berkas`;
         }
     }
@@ -614,7 +651,7 @@
         if (bookmarks) {
             container.innerHTML = bookmarks.map(bk => `
                 <div class="item-row">
-                    <div class="item-title">${escapeHTML(bk.nama)}</div>
+                    <div class="item-title" title="${escapeHTML(bk.nama)}">${escapeHTML(bk.nama)}</div>
                     <div class="item-meta"><a href="${bk.url}" target="_blank" class="item-link">${bk.url}</a></div>
                 </div>
             `).join('');
