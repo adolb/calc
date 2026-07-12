@@ -1,27 +1,45 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>My Files</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My Drive</title>
 
 <style>
-body{
-font-family:Arial;
-background:#f5f7fb;
-padding:20px
+
+*{
+box-sizing:border-box;
+font-family:Arial,sans-serif;
 }
 
-.box{
-max-width:600px;
-margin:auto;
-background:white;
+body{
+margin:0;
+background:#f5f7fb;
 padding:20px;
-border-radius:20px;
-box-shadow:0 5px 20px #ddd
+}
+
+.container{
+max-width:900px;
+margin:auto;
+}
+
+.header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:20px;
 }
 
 h2{
-color:#2563eb
+color:#2563eb;
+}
+
+.upload{
+background:white;
+padding:20px;
+border-radius:18px;
+box-shadow:0 5px 20px #ddd;
+margin-bottom:20px;
 }
 
 input,button{
@@ -29,134 +47,344 @@ width:100%;
 padding:12px;
 margin-top:10px;
 border-radius:10px;
-border:1px solid #ddd
+}
+
+input{
+border:1px solid #ddd;
 }
 
 button{
 background:#2563eb;
 color:white;
 border:0;
-font-size:16px
+cursor:pointer;
+font-size:16px;
 }
 
-.file{
-padding:15px;
-margin-top:12px;
-background:#f8fafc;
-border-radius:12px
+
+.grid{
+
+display:grid;
+grid-template-columns:
+repeat(auto-fill,minmax(160px,1fr));
+
+gap:18px;
+
 }
+
+
+.card{
+
+background:white;
+border-radius:18px;
+padding:20px;
+text-align:center;
+box-shadow:0 5px 15px rgba(0,0,0,.08);
+transition:.2s;
+
+}
+
+.card:hover{
+
+transform:translateY(-5px);
+
+}
+
+
+.icon{
+
+font-size:55px;
+
+}
+
+
+.name{
+
+margin-top:15px;
+font-weight:bold;
+word-break:break-word;
+
+}
+
+
+.size{
+
+font-size:13px;
+color:#888;
+margin-top:8px;
+
+}
+
 
 a{
+
 text-decoration:none;
-color:#2563eb
+color:#222;
+
 }
+
 </style>
 
 </head>
 
+
 <body>
 
-<div class="box">
 
-<h2>📁 My Files</h2>
+<div class="container">
 
-<input type="file" id="file">
 
-<button onclick="uploadFile()">Upload</button>
+<div class="header">
 
-<div id="list"></div>
+<h2>📁 My Drive</h2>
 
 </div>
 
 
+
+<div class="upload">
+
+<input type="file" id="file">
+
+<button onclick="uploadFile()">
+⬆ Upload File
+</button>
+
+</div>
+
+
+
+<div id="list" class="grid"></div>
+
+
+
+</div>
+
+
+
 <script>
 
-const URL="https://awlxjzfadktcthbumxle.supabase.co";
 
-const KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3bHhqemZhZGt0Y3RoYnVteGxlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3ODU3NzgsImV4cCI6MjA5OTM2MTc3OH0.ktRLTXfsYmzb5RH8qKci0FgENkqqVG9atz5sHls9RXI";
+const URL =
+"https://awlxjzfadktcthbumxle.supabase.co";
+
+
+const KEY =
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3bHhqemZhZGt0Y3RoYnVteGxlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3ODU3NzgsImV4cCI6MjA5OTM2MTc3OH0.ktRLTXfsYmzb5RH8qKci0FgENkqqVG9atz5sHls9RXI";
+
+
+
+function iconFile(name){
+
+let n=name.toLowerCase();
+
+if(n.includes(".pdf")) return "📕";
+if(n.includes(".xls")||n.includes(".xlsx")) return "📊";
+if(n.includes(".doc")||n.includes(".docx")) return "📘";
+if(n.includes(".jpg")||n.includes(".png")||n.includes(".jpeg")) return "🖼️";
+if(n.includes(".mp4")||n.includes(".mov")) return "🎥";
+if(n.includes(".mp3")) return "🎵";
+if(n.includes(".zip")) return "📦";
+
+return "📄";
+
+}
+
 
 
 async function uploadFile(){
 
-let file=document.getElementById("file").files[0];
 
-if(!file) return alert("Pilih file");
-
-
-let path=Date.now()+"_"+file.name;
+let file =
+document.getElementById("file").files[0];
 
 
-let upload=await fetch(
-URL+"/storage/v1/object/files/"+path,
+if(!file){
+
+alert("Pilih file dulu");
+return;
+
+}
+
+
+let path =
+Date.now()+"_"+file.name;
+
+
+
+let res =
+await fetch(
+
+URL+
+"/storage/v1/object/files/"+
+path,
+
 {
+
 method:"POST",
+
 headers:{
+
 "apikey":KEY,
+
 "Authorization":"Bearer "+KEY,
+
 "Content-Type":file.type
+
 },
+
 body:file
+
 });
 
 
-if(upload.ok){
+if(res.ok){
+
 alert("Upload berhasil");
+
 loadFiles();
-}else{
-alert("Upload gagal");
-}
 
 }
+
+else{
+
+alert("Upload gagal");
+
+}
+
+
+
+}
+
 
 
 
 async function loadFiles(){
 
-let res=await fetch(
-URL+"/storage/v1/object/list/files",
+
+let res =
+await fetch(
+
+URL+
+"/storage/v1/object/list/files",
+
 {
+
 method:"POST",
+
 headers:{
+
 "apikey":KEY,
+
 "Authorization":"Bearer "+KEY,
+
 "Content-Type":"application/json"
+
 },
-body:JSON.stringify({})
+
+body:JSON.stringify({
+
+limit:100,
+
+offset:0,
+
+sortBy:{
+column:"created_at",
+order:"desc"
+}
+
+})
+
 });
 
 
-let data=await res.json();
+let data =
+await res.json();
+
+
 
 let html="";
 
 
-data.forEach(f=>{
 
-let link=
-URL+"/storage/v1/object/public/files/"+f.name;
+if(!Array.isArray(data)){
+
+document.getElementById("list").innerHTML=
+"File tidak bisa dibaca";
+
+return;
+
+}
 
 
-html+=`
 
-<div class="file">
-📄 <a href="${link}" target="_blank">
-${f.name}
-</a>
+data.forEach(file=>{
+
+
+let link =
+URL+
+"/storage/v1/object/public/files/"+
+file.name;
+
+
+
+html += `
+
+
+<a href="${link}" target="_blank">
+
+
+<div class="card">
+
+
+<div class="icon">
+
+${iconFile(file.name)}
+
 </div>
 
+
+<div class="name">
+
+${file.name}
+
+</div>
+
+
+<div class="size">
+
+${file.metadata?.size 
+? Math.round(file.metadata.size/1024)+" KB"
+: ""}
+
+</div>
+
+
+</div>
+
+
+</a>
+
+
 `;
+
 
 });
 
 
 document.getElementById("list").innerHTML=html;
 
+
 }
+
 
 
 loadFiles();
 
+
+
 </script>
+
 
 </body>
 </html>
