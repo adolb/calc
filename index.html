@@ -40,7 +40,7 @@
     
     .history-title { font-size: 20px; font-weight: bold; margin-bottom: 16px; }
     .chat-bubble { background: #334155; padding: 12px; border-radius: 15px; margin-bottom: 15px; border-top-left-radius: 2px; }
-    .chat-header { font-weight: bold; font-family: monospace; color: #fff; margin-bottom: 8px; border-bottom: 1px solid #475569; padding-bottom: 4px; font-size: 14px;}
+    .chat-header { font-weight: bold; font-family: monospace; color: #fff; margin-bottom: 8px; border-bottom: 1px solid #475569; padding-bottom: 4px; font-size: 13px; display: flex; justify-content: space-between; }
     .chat-grid {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
@@ -61,8 +61,11 @@
         </div>
         <div class="sub">Traveloka / My Horison</div>
         <label>OTA</label>
-        <select id="ota"><option value="traveloka">Traveloka</option><option value="my">My Horison</option></select>
-        <label>Voucher</label>
+        <select id="ota">
+            <option value="my">My Horison (Margin 12%)</option>
+            <option value="traveloka">Traveloka (MGM)</option>
+        </select>
+        <label>Harga di Voucher</label>
         <div class="input-row">
             <input id="input" type="tel" inputmode="numeric" placeholder="Masukkan harga...">
             <button onclick="submit()">Submit</button>
@@ -94,10 +97,14 @@
             return;
         }
         document.getElementById("historyBox").innerHTML = h.map(x => {
-            let items = [1, 2, 3, 4, 5, 6].map(i => `<div>${i+1}/ ${n(x.netVal / (i+1))}</div>`).join("");
+            let items = [2, 3, 4, 5, 6, 7, 8, 9].map(i => `<div>÷${i}: ${n(x.netVal / i)}</div>`).join("");
+            let timeStr = x.time ? `<span style="color:#94a3b8; font-weight:normal;">${x.time}</span>` : '';
             return `
                 <div class="chat-bubble">
-                    <div class="chat-header">${n(x.inputVal)} -> ${n(x.netVal)} • ${x.ota.toUpperCase()}</div>
+                    <div class="chat-header">
+                        <span>${n(x.inputVal)} → ${n(x.netVal)} (${x.ota === 'traveloka' ? 'TLK' : 'MY'})</span>
+                        ${timeStr}
+                    </div>
                     <div class="chat-grid">${items}</div>
                 </div>`;
         }).join("");
@@ -110,7 +117,24 @@
         let val = c(document.getElementById("input").value);
         let o = document.getElementById("ota").value;
         if(val > 0) document.getElementById("input").value = val.toLocaleString("id-ID");
-        let netV = (o=="traveloka") ? (val/0.82)*0.75 : val*0.88;
+        
+        document.getElementById("status").innerHTML = "🟡 Belum disimpan";
+        document.getElementById("status").className = "status yellow";
+
+        let netV = 0;
+        if(o == "my") {
+            // My Horison: A - (A * 12%)
+            netV = val - (val * 0.12);
+        } else {
+            // Traveloka MGM:
+            // B = A / 0.82
+            // C = B * 0.25
+            // D = B - C
+            let hargaBeliTamu = val / 0.82;
+            let totalKomisi = hargaBeliTamu * 0.25;
+            netV = hargaBeliTamu - totalKomisi;
+        }
+        
         document.getElementById("net").innerHTML = "Rp " + n(netV);
         for(let i=2; i<=9; i++) document.getElementById("d"+i).innerHTML = "÷"+i+"<br><b>"+n(netV/i)+"</b>";
         return { netVal: netV, inputVal: val, ota: o };
@@ -119,6 +143,8 @@
     function submit(){
         let res = calc();
         if(res.inputVal > 0){
+            let now = new Date();
+            res.time = now.toLocaleTimeString("id-ID", {hour: '2-digit', minute:'2-digit'});
             h.unshift(res); 
             localStorage.setItem("otaHistory", JSON.stringify(h));
             renderHistory();
@@ -140,6 +166,10 @@
         document.body.classList.toggle("landscape-mode");
         document.getElementById("layoutBtn").innerHTML = document.body.classList.contains("landscape-mode") ? "Landscape" : "Portrait";
     }
+
+    document.getElementById("input").addEventListener("keypress", function(event) {
+        if (event.key === "Enter") { event.preventDefault(); submit(); }
+    });
 
     document.getElementById("input").oninput = calc;
     document.getElementById("ota").onchange = calc;
