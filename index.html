@@ -65,14 +65,12 @@
     .hist-split{font-size:11px; color:#94a3b8; margin-top:3px; font-family:monospace; line-height: 1.4; display: flex; flex-wrap: wrap; gap: 6px;}
 </style>
 </head>
-<!-- Kelas landscape-mode dihapus dari body agar default awal adalah Portrait -->
 <body>
 
 <div class="container">
     <div class="left-panel">
         <div class="header-row">
             <h1>OTA Calculator</h1>
-            <!-- Teks tombol disesuaikan awal menjadi Portrait -->
             <button class="layout-btn" onclick="toggleLayout()" id="layoutBtn">Portrait</button>
         </div>
         <div class="sub">Traveloka / My Horison</div>
@@ -107,6 +105,7 @@
 
 <script>
     const gridBox = document.getElementById("gridBox");
+    // Diperbaiki untuk render HTML langsung di web tanpa gangguan escape karakter Scriptable
     gridBox.innerHTML = [2,3,4,5,6,7,8,9].map(i => `<div class="box" id="d${i}">÷${i}<br><b>0</b></div>`).join('');
 
     let h = [];
@@ -165,6 +164,10 @@
 
     function submit(){
         let res = calc();
+        if(!res && inputEl.dataset.lastVal) {
+            res = JSON.parse(inputEl.dataset.lastVal);
+        }
+        
         if(res){
             h.push(res);
             h.sort((a, b) => a.netVal - b.netVal);
@@ -180,11 +183,30 @@
                 "</div>";
             }).join("");
             
+            // Pertahankan nilai di bubble hijau saat tombol submit ditekan
+            let currentNet = netEl.innerHTML;
+            let currentGross = grossEl.innerHTML;
+            let currentCut = cutEl.innerHTML;
+            
             inputEl.value = ""; 
+            
+            netEl.innerHTML = currentNet;
+            grossEl.innerHTML = currentGross;
+            cutEl.innerHTML = currentCut;
+            
             statusEl.innerHTML = "🟢 Tersimpan ke History";
             statusEl.className = "status green";
         }
     }
+    
+    inputEl.addEventListener('input', () => {
+        let val = c(inputEl.value);
+        let o = otaEl.value;
+        if(val > 0) {
+            let netV = (o=="traveloka") ? (val/0.82)*0.75 : val*0.88;
+            inputEl.dataset.lastVal = JSON.stringify({ netVal: netV, inputVal: val, ota: o });
+        }
+    });
     
     inputEl.oninput = calc;
     otaEl.onchange = calc;
