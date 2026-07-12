@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>My Dashboard Grid</title>
 
-<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<!-- Menggunakan CDN alternatif unpkg yang sangat ramah terhadap mobile browser -->
+<script src="https://unpkg.com/@supabase/supabase-js@2.39.8/dist/umd/supabase.js"></script>
 
 <style>
     * {
@@ -96,9 +97,8 @@
         font-size: 22px;
         cursor: pointer;
         user-select: none;
-        transition: transform 0.1s;
+        padding: 4px;
     }
-    .header-btn:active { transform: scale(0.9); }
 
     .card-body {
         background: #ffffff;
@@ -184,7 +184,6 @@
     .calc-btn:active { background: #cbd5e1; }
     .btn-operator { background: #ffedd5; color: #ea580c; }
     .btn-equal { background: #3b82f6; color: white; }
-    .btn-equal:active { background: #1d4ed8; }
 
     .card-footer {
         padding: 6px 20px 10px 20px;
@@ -199,6 +198,7 @@
 
 <div class="dashboard-grid">
 
+    <!-- BOX 1: CATATAN -->
     <div class="icloud-card">
         <div class="card-header">
             <div class="header-left">
@@ -218,6 +218,7 @@
         <div class="card-footer" id="notesFooter">0 Catatan</div>
     </div>
 
+    <!-- BOX 2: DRIVE -->
     <div class="icloud-card">
         <div class="card-header">
             <div class="header-left">
@@ -236,6 +237,7 @@
         <div class="card-footer">Bucket: 'documents'</div>
     </div>
 
+    <!-- BOX 3: BOOKMARK -->
     <div class="icloud-card">
         <div class="card-header">
             <div class="header-left">
@@ -255,6 +257,7 @@
         <div class="card-footer" id="bookmarkFooter">0 Tautan</div>
     </div>
 
+    <!-- BOX 4: KALKULATOR -->
     <div class="icloud-card">
         <div class="card-header">
             <div class="header-left">
@@ -298,31 +301,39 @@
 </div>
 
 <script>
-    const SUPABASE_URL = "https://awlxjzfadktcthbumxle.supabase.co"; 
-    const SUPABASE_ANON_KEY = "EyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3bHhqemZhZGt0Y3RoYnVteGxlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3ODU3NzgsImV4cCI6MjA5OTM2MTc3OH0.ktRLTXfsYmzb5RH8qKci0FgENkqqVG9atz5sHls9RXI";
+    const url_db = "https://awlxjzfadktcthbumxle.supabase.co"; 
+    const key_db = "EyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF3bHhqemZhZGt0Y3RoYnVteGxlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM3ODU3NzgsImV4cCI6MjA5OTM2MTc3OH0.ktRLTXfsYmzb5RH8qKci0FgENkqqVG9atz5sHls9RXI";
 
-    // Proteksi inisialisasi library Supabase
-    let supabase;
-    try {
-        supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    } catch(e) {
-        document.getElementById('notesContainer').innerHTML = "<div class='item-meta' style='color:red;'>Library Supabase gagal dimuat. Periksa koneksi internet Anda.</div>";
-        document.getElementById('bookmarkContainer').innerHTML = "<div class='item-meta' style='color:red;'>Library Supabase gagal dimuat.</div>";
-    }
+    var clientCloud = null;
 
     window.onload = function() {
-        if(supabase) {
+        // Metode inisialisasi yang dipaksa lolos dari kekatutan cakupan jendela Safari
+        try {
+            if (window.supabase && typeof window.supabase.createClient === 'function') {
+                clientCloud = window.supabase.createClient(url_db, key_db);
+            } else if (typeof supabase !== 'undefined' && supabase.createClient) {
+                clientCloud = supabase.createClient(url_db, key_db);
+            }
+        } catch (e) {
+            alert("Gagal memuat library sistem: " + e.message);
+        }
+
+        if (clientCloud) {
             loadNotes();
             loadBookmarks();
+        } else {
+            document.getElementById('notesContainer').innerHTML = "<div class='item-meta' style='color:#ef4444;'>Gagal menginisialisasi skrip database. Harap refresh halaman.</div>";
+            document.getElementById('bookmarkContainer').innerHTML = "<div class='item-meta' style='color:#ef4444;'>Gagal memuat sistem.</div>";
         }
     };
 
     // ====== FUNGSI CATATAN ======
     async function loadNotes() {
+        if (!clientCloud) return;
         const container = document.getElementById('notesContainer');
         const footer = document.getElementById('notesFooter');
         try {
-            let { data: catatan, error } = await supabase.from('catatan').select('*').order('id', { ascending: false }); 
+            let { data: catatan, error } = await clientCloud.from('catatan').select('*').order('id', { ascending: false }); 
             if (error) throw error;
             if (catatan && catatan.length > 0) {
                 footer.innerText = `${catatan.length} Catatan`;
@@ -337,19 +348,19 @@
                 footer.innerText = '0 Catatan';
             }
         } catch (error) { 
-            container.innerHTML = `<div class="item-meta" style="color:#ef4444;">Error: ${error.message}. Pastikan tabel 'catatan' sudah dibuat dan RLS dimatikan.</div>`; 
+            container.innerHTML = `<div class="item-meta" style="color:#ef4444;">Koneksi gagal: ${error.message}</div>`; 
         }
     }
 
     async function addNote() {
-        if(!supabase) return;
+        if(!clientCloud) { alert("Sistem belum siap."); return; }
         const title = prompt("Masukkan judul catatan:");
         if (!title) return;
         const description = prompt("Masukkan isi catatan:");
         const now = new Date();
         const date_label = `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear().toString().substring(2)}`;
         try {
-            const { error } = await supabase.from('catatan').insert([{ title, description, date_label }]);
+            const { error } = await clientCloud.from('catatan').insert([{ title, description, date_label }]);
             if (error) throw error;
             loadNotes();
         } catch (error) { alert("Gagal Menyimpan: " + error.message); }
@@ -357,7 +368,7 @@
 
     // ====== FUNGSI DRIVE ======
     async function handleFileUpload(event) {
-        if(!supabase) return;
+        if(!clientCloud) return;
         const file = event.target.files[0];
         if (!file) return;
         const statusText = document.getElementById('uploadStatus');
@@ -365,21 +376,22 @@
         try {
             const fileExt = file.name.split('.').pop();
             const filePath = `uploads/${Math.random()}.${fileExt}`;
-            let { error } = await supabase.storage.from('documents').upload(filePath, file);
+            let { error } = await clientCloud.storage.from('documents').upload(filePath, file);
             if (error) throw error;
             statusText.innerText = `✅ Berhasil: ${file.name}`;
         } catch (error) {
-            statusText.innerText = "❌ Gagal mengunggah file.";
-            alert("Error Storage: " + error.message + "\nPastikan Bucket bernama 'documents' sudah dibuat di menu Storage Supabase.");
+            statusText.innerText = "❌ Gagal mengunggah.";
+            alert("Error Storage: " + error.message);
         }
     }
 
     // ====== FUNGSI BOOKMARK ======
     async function loadBookmarks() {
+        if (!clientCloud) return;
         const container = document.getElementById('bookmarkContainer');
         const footer = document.getElementById('bookmarkFooter');
         try {
-            let { data: bookmarks, error } = await supabase.from('bookmarks').select('*').order('id', { ascending: false });
+            let { data: bookmarks, error } = await clientCloud.from('bookmarks').select('*').order('id', { ascending: false });
             if (error) throw error;
             if (bookmarks && bookmarks.length > 0) {
                 footer.innerText = `${bookmarks.length} Tautan`;
@@ -394,19 +406,19 @@
                 footer.innerText = '0 Tautan';
             }
         } catch (error) { 
-            container.innerHTML = `<div class="item-meta" style="color:#ef4444;">Error: ${error.message}. Pastikan tabel 'bookmarks' sudah dibuat dan RLS dimatikan.</div>`; 
+            container.innerHTML = `<div class="item-meta" style="color:#ef4444;">Koneksi gagal: ${error.message}</div>`; 
         }
     }
 
     async function addBookmark() {
-        if(!supabase) return;
+        if(!clientCloud) return;
         const nama = prompt("Masukkan nama/judul website:");
         if (!nama) return;
-        let url = prompt("Masukkan URL website (contoh: google.com):");
+        let url = prompt("Masukkan URL website:");
         if (!url) return;
         if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
         try {
-            const { error } = await supabase.from('bookmarks').insert([{ nama, url }]);
+            const { error } = await clientCloud.from('bookmarks').insert([{ nama, url }]);
             if (error) throw error;
             loadBookmarks();
         } catch (error) { alert("Gagal Menyimpan: " + error.message); }
