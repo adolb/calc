@@ -1,0 +1,1287 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Wildan">
+
+  <title>Wildan</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    /* ======================================================= */
+    /* --- VARIABEL DASAR & MODE TERANG/GELAP --- */
+    /* ======================================================= */
+    :root {
+        --bg-gradient: linear-gradient(135deg, #3b82f6, #60a5fa, #93c5fd);
+        --card-bg: rgba(255, 255, 255, 0.85);
+        --card-body-bg: #ffffff;
+        --text-primary: #1e293b;
+        --text-secondary: #64748b;
+        --text-meta: #94a3b8;
+        --border-color: #f1f5f9;
+        --input-bg: #f8fafc;
+        --input-border: #cbd5e1;
+        --header-bg: rgba(255, 255, 255, 0.4);
+        --box-bg: #f1f5f9;
+        --box-text: #334155;
+        --title-color: #ffffff;
+        
+        --ios-blue: #007aff;
+        --ios-blue-active: #0056b3;
+        --ios-red: #ff3b30;
+        --ios-red-active: #c72c24;
+    }
+
+    [data-theme="dark"] {
+        --bg-gradient: linear-gradient(135deg, #0f172a, #1e293b, #334155);
+        --card-bg: rgba(30, 41, 59, 0.85);
+        --card-body-bg: #1e293b;
+        --text-primary: #f8fafc;
+        --text-secondary: #cbd5e1;
+        --text-meta: #64748b;
+        --border-color: #334155;
+        --input-bg: #0f172a;
+        --input-border: #475569;
+        --header-bg: rgba(15, 23, 42, 0.4);
+        --box-bg: #0f172a;
+        --box-text: #cbd5e1;
+        --title-color: #f8fafc;
+        
+        --ios-blue: #0a84ff;
+        --ios-blue-active: #0066cc;
+        --ios-red: #ff453a;
+        --ios-red-active: #d63025;
+    }
+
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Plus Jakarta Sans", "Segoe UI", Roboto, sans-serif;
+        transition: background 0.3s, color 0.3s, border-color 0.3s;
+    }
+
+    body {
+        background: var(--bg-gradient);
+        min-height: 100vh;
+        padding: 0; 
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding-top: env(safe-area-inset-top);
+    }
+
+    body.locked {
+        overflow: hidden;
+        height: 100vh;
+        width: 100vw;
+        position: fixed; 
+        touch-action: none; 
+    }
+
+    .main-welcome-title {
+        font-size: 32px;
+        font-weight: 700;
+        color: var(--title-color);
+        margin-bottom: 24px;
+        text-align: center;
+        letter-spacing: -0.5px;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    /* --- LAYOUT GRID --- */
+    .dashboard-grid {
+        width: 100%;
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 0 40px;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr); 
+        gap: 24px;
+        align-items: start;
+    }
+
+    /* JARAK SAAT LANDSCAPE / LAYAR BESAR */
+    @media (min-width: 769px) {
+        .main-welcome-title { 
+            margin-top: 80px; 
+            font-size: 38px;
+            margin-bottom: 32px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .dashboard-grid { grid-template-columns: 1fr; padding: 0 16px; }
+        body { padding: calc(24px + env(safe-area-inset-top)) 12px 100px 12px; }
+        .main-welcome-title { font-size: 28px; margin-bottom: 16px; margin-top: 0; }
+    }
+
+    /* --- KOMPONEN KARTU ICLOUD --- */
+    .icloud-card {
+        background: var(--card-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+        border-radius: 24px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15); overflow: hidden;
+        display: flex; flex-direction: column; height: 360px; min-width: 0;
+    }
+    .icloud-card.ota-card-layout { height: 520px; }
+    .card-header { padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; background: var(--header-bg); border-bottom: 1px solid rgba(0, 0, 0, 0.05); }
+    .header-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .app-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); flex-shrink: 0; }
+    
+    .reminder-icon { background: #e0f2fe; color: #0284c7; }
+    .notes-icon { background: #fef9c3; color: #ca8a04; }
+    .drive-icon { background: #e0f2fe; color: #0284c7; }
+    .bookmark-icon { background: #dcfce7; color: #16a34a; }
+    .calc-icon { background: #fee2e2; color: #dc2626; }
+    .text-icon { background: #e8f2ff; color: var(--ios-blue); }
+    
+    .app-info { min-width: 0; }
+    .app-info h2 { font-size: 16px; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-transform: capitalize; }
+    .app-info span { font-size: 12px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .header-right { font-size: 16px; cursor: pointer; transition: opacity 0.2s; flex-shrink: 0; }
+    .header-right:hover { opacity: 0.7; }
+    .notes-color { color: #ca8a04; }
+    .drive-color { color: #0284c7; }
+    .bookmark-color { color: #16a34a; }
+    .reminder-color { color: #0284c7; }
+    
+    .card-body { background: var(--card-body-bg); padding: 20px; flex: 1; overflow-y: auto; min-width: 0; }
+    .card-footer { padding: 6px 20px 10px 20px; background: var(--card-body-bg); font-size: 13px; color: var(--text-meta); border-top: 1px solid var(--border-color); flex-shrink: 0; }
+    
+    /* WIDGET KALENDER DIPERBAIKI (TIDAK ADA SCROLL) */
+    .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 6px 4px; /* Gap dirapatkan agar fit */
+        text-align: center;
+        font-size: 13px; /* Ukuran font disesuaikan sedikit */
+        font-weight: 500;
+        color: var(--text-primary);
+        margin: 0;
+        width: 100%;
+    }
+    .calendar-grid div {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 26px; /* Tinggi disesuaikan agar tidak over */
+    }
+    .day-label { 
+        color: var(--text-meta); 
+        font-size: 12px; 
+        font-weight: 600; 
+        padding-bottom: 4px; 
+        border-bottom: 1px solid var(--border-color); 
+    }
+    .today {
+        background-color: var(--ios-red);
+        color: white;
+        border-radius: 50%;
+        width: 26px;
+        height: 26px;
+        margin: 0 auto;
+    }
+
+    /* SISTEM LIST DLL */
+    .list-container { display: flex; flex-direction: column; width: 100%; }
+    .item-row { padding: 10px 0; border-bottom: 1px solid var(--border-color); cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .item-row:hover { background: rgba(0, 0, 0, 0.02); }
+    .item-row:last-child { border-bottom: none; }
+    .item-text-wrapper { flex: 1; min-width: 0; }
+    .item-title { font-size: 14px; font-weight: 500; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .item-meta { font-size: 12px; color: var(--text-meta); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .item-link { color: #3b82f6; text-decoration: none; }
+    .reminder-item { display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border-color); gap: 12px; width: 100%; min-width: 0; transition: all 0.2s ease; }
+    .reminder-item:last-child { border-bottom: none; }
+    .ios-checkbox { width: 20px; height: 20px; border: 2px solid var(--input-border); border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; flex-shrink: 0; }
+    .ios-checkbox i { font-size: 10px; color: white; display: none; }
+    .ios-checkbox:hover { background: rgba(22, 163, 74, 0.2); border-color: #16a34a; }
+    .reminder-content { display: flex; justify-content: space-between; align-items: center; width: 100%; min-width: 0; gap: 12px; }
+    .reminder-left { font-size: 14px; font-weight: 500; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-grow: 1; min-width: 0; width: 0; transition: all 0.2s ease; }
+    .reminder-right { font-size: 11px; color: var(--text-meta); text-align: right; flex-shrink: 0; display: flex; flex-direction: column; gap: 1px; transition: all 0.2s ease; }
+    .reminder-item.completed .reminder-left { text-decoration: line-through; opacity: 0.5; }
+    .reminder-item.completed .reminder-right { opacity: 0.5; }
+    .reminder-item.completed .ios-checkbox { background: #16a34a; border-color: #16a34a; }
+    .reminder-item.completed .ios-checkbox i { display: block; }
+    .drive-upload-zone { background: var(--input-bg); border: 2px dashed var(--input-border); border-radius: 16px; padding: 12px; text-align: center; color: var(--text-secondary); cursor: pointer; margin-bottom: 12px; font-size: 13px; }
+    .drive-upload-zone i { font-size: 24px; color: #3b82f6; margin-bottom: 4px; display: block;}
+    .drive-progress-wrap { width: 100%; height: 5px; background: var(--input-border); border-radius: 3px; margin-top: 6px; display: none; overflow: hidden; }
+    .drive-progress-fill { height: 100%; width: 0%; background: #3b82f6; transition: width 0.2s ease; }
+    .drive-success-msg { font-size: 11px; color: #16a34a; margin-top: 4px; display: none; font-weight: 500; }
+    .ota-select, .ota-input { width: 100%; padding: 10px 12px; font-size: 16px; border: 1px solid var(--input-border); border-radius: 10px; background: var(--input-bg); color: var(--text-primary); outline: none; margin-top: 6px; margin-bottom: 12px; }
+    .ota-input-row { display: flex; gap: 8px; align-items: center; margin-top: 6px; margin-bottom: 12px; }
+    .ota-input-row input { flex: 1; margin: 0; min-width: 0; }
+    .ota-btn { padding: 10px 16px; border: none; border-radius: 10px; color: white; font-weight: 600; font-size: 16px; cursor: pointer; background: #16a34a; flex-shrink: 0; }
+    .ota-label { font-size: 13px; font-weight: 600; color: var(--text-secondary); display: block; }
+    .ota-status { font-size: 12px; padding: 4px 10px; border-radius: 8px; display: inline-block; font-weight: 500; margin-bottom: 14px; }
+    .ota-yellow { background: #fef3c7; color: #d97706; }
+    .ota-green { background: #dcfce7; color: #16a34a; }
+    .ota-result { background: #16a34a; padding: 16px; border-radius: 14px; text-align: center; color: white; margin-bottom: 14px; }
+    .ota-big { font-size: 28px; font-weight: bold; margin-bottom: 6px; }
+    .ota-subinfo { font-size: 13px; opacity: 0.9; line-height: 1.4; }
+    .ota-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .ota-box { background: var(--box-bg); color: var(--box-text); padding: 8px 4px; border-radius: 8px; text-align: center; font-size: 12px; line-height: 1.3; }
+    .ota-history-panel { margin-top: 16px; padding-top: 16px; border-top: 2px solid var(--border-color); max-height: 150px; overflow-y: auto; }
+    #textConverterInput { width: 100%; height: 140px; border: 1px solid var(--input-border); border-radius: 12px; padding: 12px; resize: none; font-size: 16px; outline: none; background: var(--input-bg); color: var(--text-primary); line-height: 1.4; }
+    .btn-teks { width: 100%; height: 44px; border: none; border-radius: 11px; font-weight: 600; font-size: 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; color: white; margin-top: 4px; }
+    .btn-teks.blue-mode { background: var(--ios-blue); }
+    .btn-teks.red-mode { background: var(--ios-red); }
+
+    /* --- MODAL --- */
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(10px); display: none; justify-content: center; align-items: center; z-index: 9999; padding: 20px; }
+    .modal-box { background: var(--card-body-bg); width: 100%; max-width: 520px; border-radius: 20px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); display: flex; flex-direction: column; max-height: 85vh; }
+    .modal-title { font-size: 20px; font-weight: 700; color: var(--text-primary); margin-bottom: 12px; }
+    .modal-body { font-size: 15px; color: var(--text-secondary); line-height: 1.6; overflow-y: auto; flex: 1; white-space: pre-wrap; }
+    .email-form-group { margin-bottom: 14px; display: flex; flex-direction: column; gap: 6px; }
+    .email-label { font-size: 13px; font-weight: 600; color: var(--text-secondary); }
+    .email-input-subject, .email-textarea-body, .reminder-input { width: 100%; padding: 10px 14px; font-size: 16px; border: 1px solid var(--input-border); border-radius: 10px; background: var(--input-bg); color: var(--text-primary); outline: none; }
+    .email-textarea-body { height: 180px; border-radius: 12px; resize: none; }
+    .modal-action-buttons { display: flex; gap: 12px; margin-top: 16px; }
+    .btn-action { flex: 1; padding: 12px; font-weight: 600; font-size: 16px; border-radius: 12px; cursor: pointer; border: none; text-align: center; }
+    .btn-cancel { background: #f1f5f9; color: #475569; }
+    .btn-submit { background: #3b82f6; color: white; }
+    .btn-close-only { background: #3b82f6; color: white; width: 100%; margin-top: 16px; }
+
+    /* --- THEME TOGGLE --- */
+    .theme-controller { margin-top: 40px; display: flex; align-items: center; gap: 12px; background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px); padding: 10px 20px; border-radius: 30px; color: white; font-size: 14px; font-weight: 500; margin-bottom: 40px; }
+    [data-theme="dark"] .theme-controller { background: rgba(15, 23, 42, 0.6); color: #cbd5e1; }
+    .toggle-switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 34px; }
+    .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+    input:checked + .slider { background-color: #3b82f6; }
+    input:checked + .slider:before { transform: translateX(24px); }
+
+    /* --- FULL SCREEN BLUR OVERLAY & LANDSCAPE IOS --- */
+    .ios-full-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.65); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); z-index: 99998; display: none; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 0.4s ease; }
+    .ios-central-modal { width: 92%; max-width: 480px; background: rgba(30, 41, 59, 0.85); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 28px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6); text-align: center; overflow: hidden; transform: scale(1.1); transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+    body.alert-active .ios-full-overlay { opacity: 1; pointer-events: auto; }
+    body.alert-active .ios-central-modal { transform: scale(1); }
+    .ios-modal-body { padding: 28px 28px 20px 28px; }
+    .ios-modal-icon { font-size: 32px; color: #38bdf8; margin-bottom: 14px; animation: ringEffect 2s infinite ease-in-out; }
+    @keyframes ringEffect { 0%, 100% { transform: rotate(0); } 10% { transform: rotate(15deg); } 20% { transform: rotate(-10deg); } 30% { transform: rotate(5deg); } 40% { transform: rotate(-5deg); } 50% { transform: rotate(0); } }
+    .ios-modal-title { font-size: 14px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; }
+    .ios-modal-main-content { font-size: 22px; font-weight: 700; color: #f8fafc; line-height: 1.4; margin-bottom: 20px; word-wrap: break-word; }
+    .ios-modal-time-footer { font-size: 13px; font-weight: 500; color: #94a3b8; display: flex; justify-content: center; gap: 20px; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 14px; }
+    .ios-modal-time-footer span i { margin-right: 6px; color: #38bdf8; }
+    .ios-modal-actions { display: flex; gap: 12px; padding: 0 24px 24px 24px; }
+    .ios-btn { flex: 1; padding: 14px; font-size: 15px; font-weight: 600; border: none; border-radius: 16px; cursor: pointer; color: #ffffff; transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
+    .ios-btn-skip { background: linear-gradient(135deg, #ff453a, #ff3b30); border: 1px solid rgba(255, 69, 58, 0.2); }
+
+    /* ======================================================= */
+    /* --- LAYAR LOGIN MACOS FULLSCREEN --- */
+    /* ======================================================= */
+    .mac-login-wrapper {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background-image: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1920&auto=format&fit=crop');
+        background-size: cover; background-position: center;
+        z-index: 99999; display: flex; justify-content: center; align-items: center;
+        transition: opacity 0.6s cubic-bezier(0.25, 1, 0.5, 1), transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+    .mac-login-overlay {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        backdrop-filter: blur(60px) saturate(180%); -webkit-backdrop-filter: blur(60px) saturate(180%);
+        background-color: rgba(0, 0, 0, 0.25); display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+    .mac-avatar { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(255, 255, 255, 0.15); box-shadow: 0 6px 16px rgba(0,0,0,0.3); margin-bottom: 12px; background-color: white; display: block; }
+    .mac-username { font-size: 14px; font-weight: 600; color: rgba(255, 255, 255, 0.95); text-shadow: 0 1px 3px rgba(0,0,0,0.3); margin-bottom: 16px; letter-spacing: 0.3px; }
+    .mac-password-container { display: flex; align-items: center; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 16px; padding: 3px 4px 3px 12px; width: 180px; height: 30px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.1); position: relative; transition: all 0.2s ease; }
+    .mac-password-container:focus-within { background: rgba(255, 255, 255, 0.15); border-color: rgba(255, 255, 255, 0.3); }
+    .mac-password-input { background: none; border: none; color: white; font-size: 12px; width: 100%; outline: none; letter-spacing: 1px; }
+    .mac-password-input::placeholder { color: rgba(255, 255, 255, 0.5); letter-spacing: normal; }
+    .mac-submit-btn { background: rgba(255, 255, 255, 0.2); border: none; border-radius: 50%; width: 22px; height: 22px; min-width: 22px; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; transition: background 0.2s ease; }
+    .mac-submit-btn svg { width: 12px; height: 12px; fill: none; stroke: white; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+    .mac-submit-btn:hover { background: rgba(255, 255, 255, 0.35); }
+    @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+    .shake-animation { animation: shake 0.3s ease-in-out; }
+
+    /* ======================================================= */
+    /* --- MAC NOTIFICATION CONTAINER --- */
+    /* ======================================================= */
+    .mac-notification-container { position: fixed; top: 20px; right: 20px; width: 330px; display: flex; flex-direction: column; gap: 12px; z-index: 999999; }
+    .mac-notification-banner { width: 100%; background: rgba(40, 40, 40, 0.65); backdrop-filter: blur(30px) saturate(150%); -webkit-backdrop-filter: blur(30px) saturate(150%); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 18px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); padding: 14px; display: flex; gap: 12px; color: white; opacity: 0; transform: translateX(360px); transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.6s ease; }
+    .mac-notification-banner.show { opacity: 1; transform: translateX(0); }
+    .noti-icon-wrapper { width: 38px; height: 38px; background: #ff9f0a; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+    .noti-icon-next { background: #0a84ff; }
+    .noti-content { flex: 1; min-width: 0; }
+    .noti-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; }
+    .noti-app-name { font-size: 11px; font-weight: 600; color: rgba(255, 255, 255, 0.5); text-transform: uppercase; letter-spacing: 0.5px; }
+    .noti-time { font-size: 11px; color: rgba(255, 255, 255, 0.4); }
+    .noti-title { font-size: 13px; font-weight: 600; color: #ffffff; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .noti-body { font-size: 12px; color: rgba(255, 255, 255, 0.85); line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    @media (max-width: 480px) { .mac-notification-container { width: 90%; left: 5%; right: auto; top: env(safe-area-inset-top, 20px); } .mac-notification-banner { transform: translateY(-50px); } .mac-notification-banner.show { transform: translateY(0); } }
+
+    /* --- SEARCH BAR GLASSMORPHISM --- */
+    .global-search-container { width: 100%; max-width: 600px; margin: 0 auto 32px auto; padding: 0 20px; position: relative; z-index: 1000; }
+    .global-search-input { width: 100%; padding: 14px 20px 14px 44px; font-size: 16px; border-radius: 20px; background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(40px); border: 1px solid rgba(255, 255, 255, 0.3); color: var(--title-color); outline: none; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: all 0.3s; }
+    [data-theme="dark"] .global-search-input { background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255, 255, 255, 0.1); }
+    .global-search-input::placeholder { color: rgba(255,255,255,0.8); }
+    .global-search-icon { position: absolute; left: 36px; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.9); font-size: 16px; }
+
+    /* ======================================================= */
+    /* --- NEW: POPUP SEARCH DROPDOWN --- */
+    /* ======================================================= */
+    .search-popup {
+        position: absolute;
+        top: calc(100% + 10px);
+        left: 20px;
+        right: 20px;
+        background: var(--card-body-bg);
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        max-height: 350px;
+        overflow-y: auto;
+        display: none;
+        flex-direction: column;
+        border: 1px solid var(--border-color);
+        z-index: 1000;
+    }
+    .search-popup-item {
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--border-color);
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        transition: background 0.2s ease;
+    }
+    .search-popup-item:last-child {
+        border-bottom: none;
+    }
+    .search-popup-item:hover {
+        background: rgba(0, 0, 0, 0.03);
+    }
+    .search-popup-type {
+        font-size: 11px;
+        color: var(--ios-blue);
+        text-transform: uppercase;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+    }
+    .search-popup-title {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--text-primary);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .search-popup-desc {
+        font-size: 13px;
+        color: var(--text-meta);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+  </style>
+</head>
+<body class="locked">
+
+<div class="mac-notification-container" id="loginNotiContainer">
+    <div class="mac-notification-banner" id="notiHariIni">
+        <div class="noti-icon-wrapper"><i class="fa-solid fa-list-check"></i></div>
+        <div class="noti-content">
+            <div class="noti-header"><span class="noti-app-name">Pengingat Hari Ini</span><span class="noti-time" id="timeHariIni">--:--</span></div>
+            <div class="noti-title">Memuat...</div>
+            <div class="noti-body">...</div>
+        </div>
+    </div>
+    <div class="mac-notification-banner" id="notiTerdekat">
+        <div class="noti-icon-wrapper noti-icon-next"><i class="fa-solid fa-calendar-day"></i></div>
+        <div class="noti-content">
+            <div class="noti-header"><span class="noti-app-name">Pengingat Mendatang</span><span class="noti-time">--:--</span></div>
+            <div class="noti-title">Memuat...</div>
+            <div class="noti-body">...</div>
+        </div>
+    </div>
+</div>
+
+<div class="mac-login-wrapper" id="loginWrapper">
+    <div class="mac-login-overlay">
+        <img src="profil.jpg" class="mac-avatar" alt="Profile">
+        <div class="mac-username" id="loginGreeting">Wildan</div>
+        <div class="mac-password-container">
+            <input type="password" class="mac-password-input" id="passwordInput" placeholder="" onkeypress="handleKeyPress(event)" autofocus>
+            <button class="mac-submit-btn" onclick="checkPassword()">
+                <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+        </div>
+    </div>
+</div>
+
+<h1 class="main-welcome-title" id="salam-judul">Welcome, Wildan</h1>
+
+<!-- =====================================
+     SEARCH BAR DENGAN POPUP 
+     ===================================== -->
+<div class="global-search-container">
+    <i class="fa-solid fa-magnifying-glass global-search-icon"></i>
+    <input type="text" id="globalSearch" class="global-search-input" placeholder="Cari catatan, pengingat, email..." oninput="handleGlobalSearch()">
+    
+    <!-- POPUP CONTAINER -->
+    <div id="searchPopup" class="search-popup"></div>
+</div>
+
+<div class="dashboard-grid">
+    
+    <!-- =====================================
+         1. WIDGET KALENDER (DIPERBARUI)
+         ===================================== -->
+    <div class="icloud-card">
+        <!-- Banner/Header Kalender Diperbarui -->
+        <div class="card-header">
+            <div class="header-left">
+                <div class="app-icon" style="background: var(--ios-red); color: white;"><i class="fa-regular fa-calendar"></i></div>
+                <div class="app-info" style="display: flex; flex-direction: column; gap: 4px;">
+                    <h2 id="dayName" style="margin: 0; line-height: 1; font-size: 15px;">Hari</h2>
+                    <div style="display: flex; flex-direction: column; gap: 2px;">
+                        <span id="dateMain" style="line-height: 1; font-size: 12px;">Tanggal</span>
+                        <span id="hijriDate" style="font-size: 10px; opacity: 0.8; line-height: 1;"></span>
+                    </div>
+                </div>
+            </div>
+            <!-- Tombol navigasi bulan -->
+            <div class="header-right" style="display: flex; align-items: center; gap: 12px; font-weight: 600; font-size: 14px; color: var(--text-primary);">
+                <i class="fa-solid fa-chevron-left" style="cursor:pointer;" onclick="changeMonth(-1)"></i>
+                <span id="calendarMonthYear" style="min-width: 90px; text-align: center; display: inline-block;">Bulan Tahun</span>
+                <i class="fa-solid fa-chevron-right" style="cursor:pointer;" onclick="changeMonth(1)"></i>
+            </div>
+        </div>
+        <div class="card-body" style="display: flex; flex-direction: column; justify-content: center; padding: 10px 16px;">
+            <div class="calendar-grid" id="calendarDaysGrid">
+                <!-- Data hari akan dirender di sini via JavaScript -->
+            </div>
+        </div>
+        <div class="card-footer" id="calendarFooter" style="text-align:center;">Memuat pengingat...</div>
+    </div>
+
+    <!-- =====================================
+         2. WIDGET PENGINGAT 
+         ===================================== -->
+    <div class="icloud-card">
+        <div class="card-header">
+            <div class="header-left">
+                <div class="app-icon reminder-icon"><i class="fa-solid fa-list-check"></i></div>
+                <div class="app-info"><h2>Pengingat</h2><span>Tugas & Jadwal</span></div>
+            </div>
+            <div class="header-right reminder-color" onclick="openReminderModal()"><i class="fa-solid fa-plus"></i></div>
+        </div>
+        <div class="card-body" id="reminderContainer"><div class="item-meta">Memuat...</div></div>
+        <div class="card-footer" id="reminderFooter">0 Pengingat</div>
+    </div>
+
+    <!-- =====================================
+         3. WIDGET CATATAN
+         ===================================== -->
+    <div class="icloud-card">
+        <div class="card-header">
+            <div class="header-left">
+                <div class="app-icon notes-icon"><i class="fa-solid fa-note-sticky"></i></div>
+                <div class="app-info"><h2>Catatan</h2><span>Semua iCloud</span></div>
+            </div>
+            <div style="display: flex; gap: 16px; align-items: center;">
+                <i class="fa-solid fa-rotate-right notes-color" style="cursor: pointer; font-size: 15px;" onclick="loadNotes()"></i>
+                <div class="header-right notes-color" onclick="openCreateNoteModal()"><i class="fa-regular fa-pen-to-square"></i></div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="list-container" id="notesContainer"><div class="item-meta">Memuat catatan...</div></div>
+        </div>
+        <div class="card-footer" id="notesFooter">0 Catatan</div>
+    </div>
+
+    <!-- =====================================
+         NEW: WIDGET EMAIL
+         ===================================== -->
+    <div class="icloud-card">
+        <div class="card-header">
+            <div class="header-left">
+                <div class="app-icon" style="background: #fef0d4; color: #f5b031;"><i class="fa-regular fa-envelope"></i></div>
+                <div class="app-info"><h2>Email</h2><span>wildrozaq@gmail.com</span></div>
+            </div>
+            <div class="header-right" style="color: #f5b031;" onclick="loadEmails()"><i class="fa-solid fa-rotate-right"></i></div>
+        </div>
+        <div class="card-body" style="padding: 10px 20px;">
+            <div class="list-container" id="emailListContainer">
+                <div class="item-meta" style="text-align: center; padding: 20px 0;">Memuat pesan...</div>
+            </div>
+        </div>
+        <div class="card-footer" id="emailFooter">0 Email</div>
+    </div>
+
+    <!-- =====================================
+         4. WIDGET BOOKMARK
+         ===================================== -->
+    <div class="icloud-card">
+        <div class="card-header">
+            <div class="header-left">
+                <div class="app-icon bookmark-icon"><i class="fa-solid fa-bookmark"></i></div>
+                <div class="app-info"><h2>Bookmark</h2><span>Tautan Tersimpan</span></div>
+            </div>
+            <div class="header-right bookmark-color" onclick="openBookmarkModal()"><i class="fa-solid fa-plus"></i></div>
+        </div>
+        <div class="card-body">
+            <div class="list-container" id="bookmarkContainer"><div class="item-meta">Memuat bookmark...</div></div>
+        </div>
+        <div class="card-footer" id="bookmarkFooter">0 Tautan</div>
+    </div>
+    
+    <!-- =====================================
+         5. WIDGET DRIVE
+         ===================================== -->
+    <div class="icloud-card">
+        <div class="card-header">
+            <div class="header-left">
+                <div class="app-icon drive-icon"><i class="fa-solid fa-folder-open"></i></div>
+                <div class="app-info"><h2>Drive</h2><span>File Saya</span></div>
+            </div>
+            <div class="header-right drive-color" onclick="loadDriveFiles()"><i class="fa-solid fa-rotate-right"></i></div>
+        </div>
+        <div class="card-body">
+            <div class="drive-upload-zone" onclick="document.getElementById('fileInput').click()">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+                <span id="uploadStatus">Ketuk untuk unggah file baru</span>
+                <div class="drive-progress-wrap" id="driveProgressWrap"><div class="drive-progress-fill" id="driveProgressBar"></div></div>
+                <div class="drive-success-msg" id="driveSuccessMsg">🎉 File berhasil diunggah!</div>
+                <input type="file" id="fileInput" style="display: none;" onchange="handleFileUpload(event)">
+            </div>
+            <div class="list-container" id="driveContainer"><div class="item-meta">Memuat berkas...</div></div>
+        </div>
+        <div class="card-footer" id="driveFooter">0 Berkas</div>
+    </div>
+
+    <!-- =====================================
+         6. WIDGET UBAH HURUF
+         ===================================== -->
+    <div class="icloud-card">
+        <div class="card-header">
+            <div class="header-left">
+                <div class="app-icon text-icon"><i class="fa-solid fa-font"></i></div>
+                <div class="app-info"><h2>Ubah Huruf</h2><span>Konverter Kapital</span></div>
+            </div>
+        </div>
+        <div class="card-body" style="display: flex; flex-direction: column; gap: 10px;">
+            <textarea id="textConverterInput" placeholder="Ketik atau tempel teks di sini..." oninput="resetTextButtonState()"></textarea>
+            <button id="textActionBtn" class="btn-teks blue-mode" onclick="handleTextButtonClick()">
+                <i id="textBtnIcon" class="fa-regular fa-copy"></i> <span id="textBtnText">KAPITAL & SALIN</span>
+            </button>
+        </div>
+        <div class="card-footer" style="display: flex; justify-content: space-between; align-items: center;">
+            <div id="textStatusIndicator" style="font-weight: 500; color: #16a34a; display: none;">✓ Tersalin</div>
+            <div id="textConverterFooter">0 Karakter</div>
+        </div>
+    </div>
+
+    <!-- =====================================
+         7. WIDGET OTA CALCULATOR 
+         ===================================== -->
+    <div class="icloud-card ota-card-layout">
+        <div class="card-header">
+            <div class="header-left">
+                <div class="app-icon calc-icon"><i class="fa-solid fa-calculator"></i></div>
+                <div class="app-info"><h2>OTA Calculator</h2><span>Traveloka / My Horison</span></div>
+            </div>
+        </div>
+        <div class="card-body">
+            <span class="ota-label">OTA</span>
+            <select id="ota" class="ota-select"><option value="traveloka">Traveloka</option><option value="my">My Horison</option></select>
+            
+            <span class="ota-label">Voucher</span>
+            <div class="ota-input-row">
+                <input id="input" class="ota-input" type="tel" inputmode="numeric" placeholder="Masukkan harga...">
+                <button class="ota-btn" onclick="submitOTA()">Submit</button>
+            </div>
+            <div id="status" class="ota-status ota-yellow">🟡 Belum disimpan</div>
+            
+            <div class="ota-result">
+                <div class="ota-resultTitle">Room Revenue (Net)</div>
+                <div id="net" class="ota-big">Rp 0</div>
+                <div class="ota-subinfo">Gross: <span id="gross">Rp 0</span> | Potongan: <span id="cut">Rp 0</span></div>
+            </div>
+
+            <div class="ota-grid" id="gridBox"></div>
+
+            <div class="ota-history-panel">
+                <div class="ota-history-title">History</div>
+                <div class="list-container" id="historyBox" style="font-size: 13px; color: #475569;">Belum ada history</div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="theme-controller">
+    <span>Mode Siang</span>
+    <label class="toggle-switch">
+        <input type="checkbox" id="themeToggle" onchange="toggleTheme(this)">
+        <span class="slider"></span>
+    </label>
+    <span>Mode Malam</span>
+</div>
+
+<!-- ======================================================= -->
+<!-- --- SEMUA MODAL POP-UP TETAP SAMA SEPERTI ASLINYA ---   -->
+<!-- ======================================================= -->
+
+<div class="ios-full-overlay" id="alertOverlay">
+    <div class="ios-central-modal">
+        <div class="ios-modal-body">
+            <div class="ios-modal-icon"><i class="fa-solid fa-bell"></i></div>
+            <div class="ios-modal-title">Pengingat Hari Ini</div>
+            <div class="ios-modal-main-content" id="lblMainContent">Memuat...</div>
+            <div class="ios-modal-time-footer">
+                <span id="lblTime"><i class="fa-regular fa-clock"></i> --:--</span>
+                <span id="lblDate"><i class="fa-regular fa-calendar"></i> --/--/----</span>
+            </div>
+        </div>
+        <div class="ios-modal-actions"><button class="ios-btn ios-btn-skip" onclick="closeAlertTemporary()">Tutup</button></div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="noteViewModal" onclick="closeNoteViewModal()">
+    <div class="modal-box" onclick="event.stopPropagation()">
+        <div class="modal-title" id="modalViewTitle">Judul</div>
+        <div class="modal-body" id="modalViewBody">Isi lengkap catatan Anda...</div>
+        <div class="modal-action-buttons">
+            <button class="btn-action" style="background:#8b5cf6; color:white; font-size:14px; padding:10px;" id="btnPinNote" onclick="togglePinNote()"><i class="fa-solid fa-thumbtack"></i> Sematkan</button>
+            <button class="btn-action" style="background:#16a34a; color:white; font-size:14px; padding:10px;" onclick="copyNote()"><i class="fa-regular fa-copy"></i> Copy</button>
+            <button class="btn-action" style="background:#f59e0b; color:white; font-size:14px; padding:10px;" onclick="prepareEditNote()"><i class="fa-regular fa-pen-to-square"></i> Edit</button>
+            <button class="btn-action" style="background:#ef4444; color:white; font-size:14px; padding:10px;" onclick="deleteNote()"><i class="fa-solid fa-trash-can"></i> Hapus</button>
+        </div>
+        <button class="btn-action btn-close-only" onclick="closeNoteViewModal()">Tutup</button>
+    </div>
+</div>
+
+<div class="modal-overlay" id="noteCreateModal" onclick="closeCreateNoteModal()">
+    <div class="modal-box" onclick="event.stopPropagation()">
+        <div class="modal-title" id="modalTitle"><i class="fa-regular fa-envelope"></i> Catatan Baru</div>
+        <div class="card-body" style="padding:0; overflow:visible;">
+            <div class="email-form-group"><label class="email-label" id="labelSubject">Judul / Subjek:</label><input type="text" id="noteSubjectInput" class="email-input-subject"></div>
+            <div class="email-form-group"><label class="email-label" id="labelBody">Isi Catatan:</label><textarea id="noteBodyInput" class="email-textarea-body"></textarea></div>
+        </div>
+        <div class="modal-action-buttons">
+            <button class="btn-action btn-cancel" onclick="closeCreateNoteModal()">Batal</button>
+            <button class="btn-action btn-submit" id="submitBtn" onclick="submitNewNote()">Simpan</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="reminderModal" onclick="closeReminderModal()">
+    <div class="modal-box" onclick="event.stopPropagation()">
+        <div class="modal-title"><i class="fa-solid fa-bell" style="color:var(--ios-blue);"></i> Buat Pengingat</div>
+        <div class="email-form-group"><label class="email-label">Keterangan Catatan:</label><input type="text" id="inputKeterangan" class="reminder-input" placeholder="Contoh: Meeting evaluasi..."></div>
+        <div class="email-form-group"><label class="email-label">Jam Yang Dituju:</label><input type="time" id="inputJam" class="reminder-input"></div>
+        <div class="email-form-group"><label class="email-label">Pilih Tanggal & Bulan:</label><input type="date" id="inputTanggal" class="reminder-input"></div>
+        <div class="modal-action-buttons">
+            <button class="btn-action btn-cancel" onclick="closeReminderModal()">Batal</button>
+            <button class="btn-action btn-submit" onclick="saveNewReminder()">Simpan</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="reminderViewModal" onclick="closeReminderViewModal()">
+    <div class="modal-box" onclick="event.stopPropagation()">
+        <div class="modal-title"><i class="fa-solid fa-bell" style="color:var(--ios-blue);"></i> Detail Pengingat</div>
+        <div class="email-form-group"><label class="email-label">Keterangan Catatan:</label><input type="text" id="editRemKeterangan" class="reminder-input"></div>
+        <div class="email-form-group"><label class="email-label">Jam Yang Dituju:</label><input type="time" id="editRemJam" class="reminder-input"></div>
+        <div class="email-form-group"><label class="email-label">Pilih Tanggal & Bulan:</label><input type="date" id="editRemTanggal" class="reminder-input"></div>
+        <div class="modal-action-buttons" style="margin-top: 10px; margin-bottom: 6px;">
+            <button class="btn-action" style="background:#16a34a; color:white; font-size:14px; padding:10px;" onclick="copyReminder()"><i class="fa-regular fa-copy"></i> Copy</button>
+            <button class="btn-action" style="background:#ef4444; color:white; font-size:14px; padding:10px;" onclick="deleteReminder()"><i class="fa-solid fa-trash-can"></i> Hapus</button>
+        </div>
+        <div class="modal-action-buttons">
+            <button class="btn-action btn-cancel" onclick="closeReminderViewModal()">Batal</button>
+            <button class="btn-action btn-submit" onclick="saveEditReminder()">Simpan Edit</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="emailModal" onclick="closeEmailModal()">
+    <div class="modal-box" onclick="event.stopPropagation()">
+        <div class="modal-title" id="modalEmailSubject">Subjek Pesan</div>
+        <div class="email-label" id="modalEmailSender" style="margin-bottom: 12px; font-weight: 500;">Dari: Pengirim</div>
+        <div class="modal-body" id="modalEmailContent" style="padding:0; margin-bottom:12px;">Isi pesan...</div>
+        
+        <div class="modal-action-buttons">
+            <button class="btn-action" style="background:#f5b031; color:white;" id="copyEmailBtn" onclick="copyEmailMessage()"><i class="fa-regular fa-copy"></i> Salin</button>
+            <button class="btn-action btn-cancel" onclick="closeEmailModal()">Tutup</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // =======================================================
+    // LOGIKA LOGIN & AUTO LOGOUT
+    // =======================================================
+    const CORRECT_PASSWORD = "margoyoso"; 
+    let inactivityTimer;
+
+    function checkPassword() {
+        const inputField = document.getElementById("passwordInput");
+        const container = document.querySelector(".mac-password-container");
+        const loginWrapper = document.getElementById("loginWrapper");
+        const loginNoti = document.getElementById("loginNotiContainer");
+
+        if (inputField.value === CORRECT_PASSWORD) {
+            loginWrapper.style.opacity = "0";
+            loginWrapper.style.transform = "scale(1.05)";
+            if(loginNoti) loginNoti.style.display = "none"; 
+            setTimeout(() => {
+                loginWrapper.style.display = "none";
+                document.body.classList.remove("locked"); 
+                startInactivityTracker(); 
+            }, 600);
+        } else {
+            container.classList.remove("shake-animation");
+            void container.offsetWidth; 
+            container.classList.add("shake-animation"); 
+            inputField.value = ""; 
+        }
+    }
+    function handleKeyPress(event) { if (event.key === "Enter") checkPassword(); }
+
+    function handleLogout() {
+        const loginWrapper = document.getElementById("loginWrapper");
+        const inputField = document.getElementById("passwordInput");
+        const loginNoti = document.getElementById("loginNotiContainer");
+        document.body.classList.add("locked");
+        loginWrapper.style.display = "flex";
+        if(loginNoti) loginNoti.style.display = "flex";
+        setTimeout(() => { loginWrapper.style.opacity = "1"; loginWrapper.style.transform = "scale(1)"; }, 10);
+        inputField.value = ""; stopInactivityTracker(); 
+    }
+
+    function resetInactivityTimer() { clearTimeout(inactivityTimer); inactivityTimer = setTimeout(handleLogout, 60000); }
+    function startInactivityTracker() {
+        window.addEventListener('mousemove', resetInactivityTimer); window.addEventListener('mousedown', resetInactivityTimer);
+        window.addEventListener('keypress', resetInactivityTimer); window.addEventListener('touchstart', resetInactivityTimer);
+        window.addEventListener('scroll', resetInactivityTimer); resetInactivityTimer(); 
+    }
+    function stopInactivityTracker() {
+        window.removeEventListener('mousemove', resetInactivityTimer); window.removeEventListener('mousedown', resetInactivityTimer);
+        window.removeEventListener('keypress', resetInactivityTimer); window.removeEventListener('touchstart', resetInactivityTimer);
+        window.removeEventListener('scroll', resetInactivityTimer); clearTimeout(inactivityTimer);
+    }
+
+    // =======================================================
+    // SUPABASE CONFIG & DASHBOARD LOGIC
+    // =======================================================
+    const SUPABASE_URL = "https://awlxjzfadktcthbumxle.supabase.co"; 
+    const SUPABASE_ANON_KEY = "sb_publishable_LnE9IH5KKDzdV-gj9tIb6w_uOGVZi4o";
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
+
+    let currentNotesList = []; let currentReminders = []; let isBookmarkMode = false; let editingNoteId = null; let isTextConverterSubmitted = false; let currentViewedNote = null; let currentViewedReminder = null;
+    const today = new Date(); const dd = String(today.getDate()).padStart(2, '0'); const mm = String(today.getMonth() + 1).padStart(2, '0'); const yyyy = today.getFullYear();
+    const formattedTodaySystem = `${yyyy}-${mm}-${dd}`; const formattedTodayDisplay = `${dd}/${mm}/${yyyy}`;
+
+    function aturUcapanJudul() {
+        const jam = new Date().getHours(); let ucapan = 'Good Evening'; 
+        if (jam >= 5 && jam < 12) { ucapan = 'Good Morning'; } 
+        else if (jam >= 12 && jam < 18) { ucapan = 'Good Afternoon'; } 
+        else if (jam >= 18 && jam < 24) { ucapan = 'Good Evening'; } 
+        else { ucapan = 'Good Night'; }
+        const salamLengkap = ucapan + ', Wildan';
+        document.getElementById('salam-judul').innerText = salamLengkap; document.getElementById('loginGreeting').innerText = salamLengkap;
+    }
+
+    // --- FUNGSI UPDATE KALENDER WAKTU HEADER ---
+    function updateCalendarWidget() {
+        const now = new Date();
+        const clockEl = document.getElementById("clock");
+        if (clockEl) {
+            clockEl.innerText = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+        }
+        
+        document.getElementById("dayName").innerText = now.toLocaleDateString('id-ID', { weekday: 'long' }).toUpperCase();
+        document.getElementById("dateMain").innerText = now.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+        const hijri = new Intl.DateTimeFormat('id-u-ca-islamic-umalqura', { day: 'numeric', month: 'long', year: 'numeric' }).format(now);
+        document.getElementById("hijriDate").innerText = hijri;
+    }
+
+    // --- FUNGSI GENERATE GRID KALENDER DINAMIS ---
+    let currentCalDate = new Date();
+    
+    function renderCalendar() {
+        const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+        const year = currentCalDate.getFullYear();
+        const month = currentCalDate.getMonth();
+        
+        document.getElementById("calendarMonthYear").innerText = `${monthNames[month]} ${year}`;
+        
+        const firstDay = new Date(year, month, 1).getDay(); // 0 (Minggu) hingga 6 (Sabtu)
+        const startDay = firstDay === 0 ? 6 : firstDay - 1; // Sesuaikan jika Senin adalah hari pertama
+        
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        
+        let gridHtml = `
+            <div class="day-label">S</div><div class="day-label">S</div><div class="day-label">R</div>
+            <div class="day-label">K</div><div class="day-label">J</div><div class="day-label">S</div>
+            <div class="day-label">M</div>
+        `;
+        
+        for (let i = 0; i < startDay; i++) {
+            gridHtml += `<div></div>`;
+        }
+        
+        const todayReal = new Date();
+        for (let i = 1; i <= daysInMonth; i++) {
+            if (i === todayReal.getDate() && month === todayReal.getMonth() && year === todayReal.getFullYear()) {
+                gridHtml += `<div class="today">${i}</div>`;
+            } else {
+                gridHtml += `<div>${i}</div>`;
+            }
+        }
+        
+        document.getElementById("calendarDaysGrid").innerHTML = gridHtml;
+    }
+
+    function changeMonth(offset) {
+        currentCalDate.setMonth(currentCalDate.getMonth() + offset);
+        renderCalendar();
+    }
+
+    window.onload = function() {
+        loadNotes(); loadDriveFiles(); loadBookmarks(); fetchReminders(); initOTAGrid(); initTheme(); aturUcapanJudul(); 
+        updateCalendarWidget(); setInterval(updateCalendarWidget, 60000); 
+        renderCalendar(); 
+    };
+
+    function updateLoginNotifications() {
+        const activeTasks = currentReminders.filter(item => !item.is_completed);
+        const todayTasks = activeTasks.filter(item => item.reminder_date === formattedTodaySystem);
+        const upcomingTasks = activeTasks.filter(item => item.reminder_date > formattedTodaySystem).sort((a, b) => new Date(a.reminder_date) - new Date(b.reminder_date));
+        
+        const calFooter = document.getElementById('calendarFooter');
+        if (calFooter) {
+            calFooter.innerText = `Ada ${todayTasks.length} pengingat hari ini`;
+        }
+
+        const bannerHariIni = document.getElementById('notiHariIni'); const bannerTerdekat = document.getElementById('notiTerdekat');
+        if (todayTasks.length > 0) {
+            bannerHariIni.style.display = 'flex'; const task = todayTasks[0];
+            bannerHariIni.querySelector('.noti-title').innerText = task.content; bannerHariIni.querySelector('.noti-body').innerText = "Tenggat waktu hari ini. Jangan sampai terlewat.";
+            bannerHariIni.querySelector('.noti-time').innerText = task.reminder_time ? task.reminder_time.substring(0, 5) : "--:--";
+            setTimeout(() => { bannerHariIni.classList.add('show'); }, 800);
+        } else { bannerHariIni.style.display = 'none'; bannerHariIni.classList.remove('show'); }
+
+        if (upcomingTasks.length > 0) {
+            bannerTerdekat.style.display = 'flex'; const nextTask = upcomingTasks[0];
+            bannerTerdekat.querySelector('.noti-title').innerText = nextTask.content;
+            const dateParts = nextTask.reminder_date.split("-"); const formattedNextDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
+            bannerTerdekat.querySelector('.noti-body').innerText = `Jadwal terdekat pada ${formattedNextDate}.`;
+            bannerTerdekat.querySelector('.noti-time').innerText = nextTask.reminder_time ? nextTask.reminder_time.substring(0, 5) : "--:--";
+            const delay = todayTasks.length > 0 ? 1300 : 800; setTimeout(() => { bannerTerdekat.classList.add('show'); }, delay);
+        } else { bannerTerdekat.style.display = 'none'; bannerTerdekat.classList.remove('show'); }
+    }
+
+    function initTheme() {
+        const savedTheme = localStorage.getItem('theme') || 'light'; document.documentElement.setAttribute('data-theme', savedTheme);
+        if (savedTheme === 'dark') document.getElementById('themeToggle').checked = true;
+    }
+    function toggleTheme(checkbox) {
+        if (checkbox.checked) { document.documentElement.setAttribute('data-theme', 'dark'); localStorage.setItem('theme', 'dark'); } 
+        else { document.documentElement.setAttribute('data-theme', 'light'); localStorage.setItem('theme', 'light'); }
+    }
+    function escapeHTML(str) { return str ? str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)) : ''; }
+
+    function checkReminders() {
+        const activeTasks = currentReminders.filter(item => item.reminder_date === formattedTodaySystem && !item.is_completed);
+        if (activeTasks.length > 0) {
+            const task = activeTasks[0]; const displayTime = task.reminder_time ? task.reminder_time.substring(0, 5) : "--:--";
+            document.getElementById('lblMainContent').innerText = task.content; document.getElementById('lblTime').innerHTML = `<i class="fa-regular fa-clock"></i> Pukul ${displayTime}`;
+            document.getElementById('lblDate').innerHTML = `<i class="fa-regular fa-calendar"></i> ${formattedTodayDisplay}`;
+            document.body.classList.add('alert-active');
+        } else { document.body.classList.remove('alert-active'); }
+    }
+    function closeAlertTemporary() { document.body.classList.remove('alert-active'); }
+
+    function openReminderModal() { document.getElementById('inputTanggal').value = formattedTodaySystem; document.getElementById('reminderModal').style.display = 'flex'; }
+    function closeReminderModal() { document.getElementById('reminderModal').style.display = 'none'; document.getElementById('inputKeterangan').value = ""; document.getElementById('inputJam').value = ""; }
+    function formatSimpleDate(dateStr) { if(!dateStr) return ""; const parts = dateStr.split("-"); return `${parts[2]}/${parts[1]}`; }
+    
+    async function fetchReminders() {
+        const { data, error } = await supabaseClient.from('pengingat').select('*');
+        if (!error && data) {
+            currentReminders = data.sort((a, b) => { if (a.is_completed === b.is_completed) return new Date(a.reminder_date) - new Date(b.reminder_date); return a.is_completed ? 1 : -1; });
+            renderReminders(); checkReminders(); updateLoginNotifications(); 
+        }
+    }
+    async function saveNewReminder() {
+        const ket = document.getElementById('inputKeterangan').value.trim(); const jam = document.getElementById('inputJam').value; const tgl = document.getElementById('inputTanggal').value;
+        if(!ket || !jam || !tgl) return alert("Harap lengkapi Keterangan, Jam, dan Tanggal!");
+        const { error } = await supabaseClient.from('pengingat').insert([{ content: ket, reminder_time: jam, reminder_date: tgl, is_completed: false }]);
+        if (error) { alert("Gagal menyimpan: " + error.message); } else { closeReminderModal(); fetchReminders(); }
+    }
+    async function toggleReminderStatus(id, currentStatus) {
+        const newStatus = !currentStatus; const { error } = await supabaseClient.from('pengingat').update({ is_completed: newStatus }).eq('id', id);
+        if (!error) { fetchReminders(); } else { alert("Gagal memperbarui."); }
+    }
+    function renderReminders() {
+        const container = document.getElementById('reminderContainer'); const footer = document.getElementById('reminderFooter');
+        if(currentReminders.length === 0) { container.innerHTML = '<div style="font-size:13px; color:var(--text-meta); padding: 10px 0;">Tidak ada pengingat aktif.</div>'; footer.innerText = "0 Pengingat"; return; }
+        container.innerHTML = currentReminders.map(item => {
+            const displayTime = item.reminder_time ? item.reminder_time.substring(0, 5) : ""; const isCompleted = item.is_completed ? true : false; const completedClass = isCompleted ? 'completed' : '';
+            return `<div class="reminder-item ${completedClass}">
+                        <div class="ios-checkbox" onclick="toggleReminderStatus('${item.id}', ${isCompleted})"><i class="fa-solid fa-check"></i></div>
+                        <div class="reminder-content" style="cursor:pointer;" onclick="openViewReminder('${item.id}')">
+                            <div class="reminder-left" title="${escapeHTML(item.content)}">${escapeHTML(item.content)}</div>
+                            <div class="reminder-right"><strong style="color: var(--text-primary); font-size:13px;">${displayTime}</strong><span>${formatSimpleDate(item.reminder_date)}</span></div>
+                        </div>
+                    </div>`;
+        }).join('');
+        footer.innerText = `${currentReminders.filter(r => !r.is_completed).length} Pengingat Aktif`;
+    }
+    function openViewReminder(id) {
+        currentViewedReminder = currentReminders.find(r => r.id == id); if(!currentViewedReminder) return;
+        document.getElementById('editRemKeterangan').value = currentViewedReminder.content; document.getElementById('editRemJam').value = currentViewedReminder.reminder_time;
+        document.getElementById('editRemTanggal').value = currentViewedReminder.reminder_date; document.getElementById('reminderViewModal').style.display = 'flex';
+    }
+    function closeReminderViewModal() { document.getElementById('reminderViewModal').style.display = 'none'; }
+    function copyReminder() { if(currentViewedReminder) { navigator.clipboard.writeText(`Pengingat: ${currentViewedReminder.content}\nTanggal: ${currentViewedReminder.reminder_date}\nJam: ${currentViewedReminder.reminder_time}`).then(() => alert("Tersalin!")); } }
+    async function saveEditReminder() {
+        const ket = document.getElementById('editRemKeterangan').value.trim(); const jam = document.getElementById('editRemJam').value; const tgl = document.getElementById('editRemTanggal').value;
+        if(!ket || !jam || !tgl) return alert("Lengkapi data!");
+        const { error } = await supabaseClient.from('pengingat').update({ content: ket, reminder_time: jam, reminder_date: tgl }).eq('id', currentViewedReminder.id);
+        if (error) { alert("Gagal: " + error.message); } else { closeReminderViewModal(); fetchReminders(); }
+    }
+    async function deleteReminder() { if(confirm("Yakin hapus?")) { await supabaseClient.from('pengingat').delete().eq('id', currentViewedReminder.id); closeReminderViewModal(); fetchReminders(); } }
+
+    // =======================================================
+    // --- FUNGSI PENCARIAN GLOBAL BARU (POP-UP) ---
+    // =======================================================
+    function handleGlobalSearch() { 
+        const query = document.getElementById('globalSearch').value.toLowerCase().trim();
+        const popup = document.getElementById('searchPopup');
+
+        // Sembunyikan popup jika input kosong
+        if (query === '') {
+            popup.style.display = 'none';
+            return;
+        }
+
+        let results = [];
+
+        // 1. Cari di Catatan
+        if (typeof currentNotesList !== 'undefined') {
+            currentNotesList.forEach((note, index) => {
+                if ((note.tittle && note.tittle.toLowerCase().includes(query)) || (note.description && note.description.toLowerCase().includes(query))) {
+                    results.push({ type: 'Catatan', title: note.tittle, desc: note.description, action: `viewFullNote(${index})` });
+                }
+            });
+        }
+
+        // 2. Cari di Pengingat
+        if (typeof currentReminders !== 'undefined') {
+            currentReminders.forEach(rem => {
+                if (rem.content && rem.content.toLowerCase().includes(query)) {
+                    const displayTime = rem.reminder_time ? rem.reminder_time.substring(0, 5) : "";
+                    results.push({ type: 'Pengingat', title: rem.content, desc: `${formatSimpleDate(rem.reminder_date)} - ${displayTime}`, action: `openViewReminder('${rem.id}')` });
+                }
+            });
+        }
+
+        // 3. Cari di Email
+        if (typeof emailsData !== 'undefined') {
+            emailsData.forEach((email, index) => {
+                if ((email.subject && email.subject.toLowerCase().includes(query)) || (email.sender && email.sender.toLowerCase().includes(query)) || (email.body && email.body.toLowerCase().includes(query))) {
+                    results.push({ type: 'Email', title: email.subject || 'Tanpa Subjek', desc: `Dari: ${cleanSenderName(email.sender)}`, action: `openEmailMessage(${index})` });
+                }
+            });
+        }
+
+        // Render hasil ke dalam Popup
+        if (results.length > 0) {
+            popup.innerHTML = results.map(res => `
+                <div class="search-popup-item" onclick="${res.action}; document.getElementById('searchPopup').style.display='none'; document.getElementById('globalSearch').value='';">
+                    <div class="search-popup-type">${res.type}</div>
+                    <div class="search-popup-title">${escapeHTML(res.title)}</div>
+                    <div class="search-popup-desc">${escapeHTML(res.desc)}</div>
+                </div>
+            `).join('');
+            popup.style.display = 'flex';
+        } else {
+            popup.innerHTML = `<div class="search-popup-item" style="cursor: default;"><div class="search-popup-desc" style="text-align:center; padding: 10px 0;">Tidak ada hasil ditemukan</div></div>`;
+            popup.style.display = 'flex';
+        }
+    }
+
+    // Menutup popup saat klik di luar kotak pencarian
+    document.addEventListener('click', function(event) {
+        const searchContainer = document.querySelector('.global-search-container');
+        const popup = document.getElementById('searchPopup');
+        if (searchContainer && popup && !searchContainer.contains(event.target)) {
+            popup.style.display = 'none';
+        }
+    });
+    // =======================================================
+
+
+    function openBookmarkModal() {
+        isBookmarkMode = true; document.getElementById('modalTitle').innerHTML = '<i class="fa-solid fa-bookmark" style="color:#16a34a; margin-right:8px;"></i>Bookmark Baru';
+        document.getElementById('labelSubject').innerText = "Nama Website:"; document.getElementById('noteSubjectInput').placeholder = "Contoh: Google";
+        document.getElementById('labelBody').innerText = "URL:"; document.getElementById('noteBodyInput').placeholder = "https://...";
+        document.getElementById('submitBtn').innerText = "Simpan Bookmark"; document.getElementById('noteCreateModal').style.display = 'flex';
+    }
+    function openCreateNoteModal() {
+        isBookmarkMode = false; document.getElementById('modalTitle').innerHTML = '<i class="fa-regular fa-envelope" style="color:#3b82f6; margin-right:8px;"></i>Catatan Baru';
+        document.getElementById('labelSubject').innerText = "Judul / Subjek:"; document.getElementById('noteSubjectInput').placeholder = "Ketik subjek catatan...";
+        document.getElementById('labelBody').innerText = "Isi Catatan:"; document.getElementById('noteBodyInput').placeholder = "Tulis teks...";
+        document.getElementById('submitBtn').innerText = "Simpan"; document.getElementById('noteCreateModal').style.display = 'flex';
+    }
+    function closeCreateNoteModal() { document.getElementById('noteCreateModal').style.display = 'none'; document.getElementById('noteSubjectInput').value = ""; document.getElementById('noteBodyInput').value = ""; document.getElementById('submitBtn').onclick = submitNewNote; }
+    async function submitNewNote() {
+        if (isBookmarkMode) {
+            const nama = document.getElementById('noteSubjectInput').value.trim(); let url = document.getElementById('noteBodyInput').value.trim();
+            if (!nama || !url) return alert("Tidak boleh kosong!"); if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+            try { await supabaseClient.from('bookmark').insert([{ nama: nama, url: url }]); closeCreateNoteModal(); loadBookmarks(); } catch (e) { alert(e.message); }
+        } else {
+            const judul = document.getElementById('noteSubjectInput').value.trim(); const isi = document.getElementById('noteBodyInput').value.trim();
+            if (!judul) return alert("Judul wajib diisi!");
+            try { await supabaseClient.from('catatan').insert([{ tittle: judul, description: isi }]); closeCreateNoteModal(); loadNotes(); } catch (e) { alert(e.message); }
+        }
+    }
+    
+    // (Diperbarui) Fungsi Load Notes kini tidak memiliki parameter query untuk memfilter halaman depan
+    async function loadNotes() {
+        const container = document.getElementById('notesContainer'); container.innerHTML = '<div class="item-meta">Memuat catatan...</div>';
+        let { data: catatan } = await supabaseClient.from('catatan').select('*').order('is_pinned', { ascending: false }).order('id', { ascending: false });
+        currentNotesList = catatan || []; 
+        let filteredNotes = currentNotesList; // Tanpa search filter lagi untuk halaman utama
+        
+        if (filteredNotes.length > 0) {
+            document.getElementById('notesFooter').innerText = `${filteredNotes.length} Catatan`;
+            container.innerHTML = filteredNotes.map((note) => {
+                const originalIndex = currentNotesList.findIndex(n => n.id === note.id);
+                const pinIcon = note.is_pinned ? '<i class="fa-solid fa-thumbtack" style="color: #f59e0b; font-size: 14px; flex-shrink: 0;"></i>' : '';
+                return `<div class="item-row" onclick="viewFullNote(${originalIndex})">
+                            <div class="item-text-wrapper"><div class="item-title">${escapeHTML(note.tittle)}</div><div class="item-meta"><span>${escapeHTML(note.description)}</span></div></div>${pinIcon}
+                        </div>`;
+            }).join('');
+        } else { document.getElementById('notesFooter').innerText = `0 Catatan`; container.innerHTML = '<div class="item-meta">Tidak ada catatan ditemukan.</div>'; }
+    }
+
+    function viewFullNote(index) {
+        currentViewedNote = currentNotesList[index]; document.getElementById('modalViewTitle').innerText = currentViewedNote.tittle; document.getElementById('modalViewBody').innerText = currentViewedNote.description;
+        const pinBtn = document.getElementById('btnPinNote');
+        if(currentViewedNote.is_pinned) { pinBtn.innerHTML = '<i class="fa-solid fa-thumbtack-slash"></i> Lepas Pin'; pinBtn.style.background = '#64748b'; } 
+        else { pinBtn.innerHTML = '<i class="fa-solid fa-thumbtack"></i> Sematkan'; pinBtn.style.background = '#8b5cf6'; }
+        document.getElementById('noteViewModal').style.display = 'flex';
+    }
+    async function togglePinNote() {
+        if(!currentViewedNote) return;
+        try { await supabaseClient.from('catatan').update({ is_pinned: !currentViewedNote.is_pinned }).eq('id', currentViewedNote.id); closeNoteViewModal(); loadNotes(); } 
+        catch (e) { alert("Gagal: " + e.message); }
+    }
+    function closeNoteViewModal() { document.getElementById('noteViewModal').style.display = 'none'; }
+    function copyNote() { if(currentViewedNote) { navigator.clipboard.writeText(`${currentViewedNote.tittle}\n\n${currentViewedNote.description}`).then(() => alert("Catatan disalin!")); } }
+    function prepareEditNote() {
+        closeNoteViewModal(); isBookmarkMode = false; editingNoteId = currentViewedNote.id; 
+        document.getElementById('modalTitle').innerHTML = '<i class="fa-regular fa-pen-to-square" style="color:#f59e0b; margin-right:8px;"></i>Edit Catatan';
+        document.getElementById('noteSubjectInput').value = currentViewedNote.tittle; document.getElementById('noteBodyInput').value = currentViewedNote.description;
+        document.getElementById('submitBtn').innerText = "Simpan Perubahan"; document.getElementById('submitBtn').onclick = executeEditNote; document.getElementById('noteCreateModal').style.display = 'flex';
+    }
+    async function executeEditNote() {
+        const judul = document.getElementById('noteSubjectInput').value.trim(); const isi = document.getElementById('noteBodyInput').value.trim();
+        if (!judul) return alert("Judul wajib diisi!");
+        try { await supabaseClient.from('catatan').update({ tittle: judul, description: isi }).eq('id', editingNoteId); closeCreateNoteModal(); loadNotes(); } catch (e) { alert(e.message); }
+    }
+    async function deleteNote() { if(confirm("Yakin hapus?")) { await supabaseClient.from('catatan').delete().eq('id', currentViewedNote.id); closeNoteViewModal(); loadNotes(); } }
+    async function loadBookmarks() {
+        const container = document.getElementById('bookmarkContainer'); let { data: bookmarks } = await supabaseClient.from('bookmark').select('*').order('id', { ascending: false });
+        if (bookmarks) {
+            container.innerHTML = bookmarks.map(bk => `<div class="item-row" style="cursor: default;"><div class="item-text-wrapper"><div class="item-title" title="${escapeHTML(bk.nama)}">${escapeHTML(bk.nama)}</div><div class="item-meta"><a href="${bk.url}" target="_blank" class="item-link">${bk.url}</a></div></div></div>`).join('');
+            document.getElementById('bookmarkFooter').innerText = `${bookmarks.length} Tautan`;
+        }
+    }
+
+    async function loadDriveFiles() {
+        const container = document.getElementById('driveContainer'); const { data: files } = await supabaseClient.storage.from('documents').list('uploads');
+        if (files) {
+            const sortedFiles = files.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            container.innerHTML = sortedFiles.map(file => {
+                let cleanName = file.name.substring(file.name.indexOf('_') + 1); let publicUrl = supabaseClient.storage.from('documents').getPublicUrl(`uploads/${file.name}`).data.publicUrl;
+                return `<div class="item-row" style="cursor: default;"><div class="item-text-wrapper"><div class="item-title" title="${escapeHTML(cleanName)}">${escapeHTML(cleanName)}</div><div class="item-meta"><a href="${publicUrl}" target="_blank" class="item-link">Buka File</a></div></div><div style="cursor: pointer; color: var(--ios-blue); font-size: 18px; padding: 4px 8px; transition: opacity 0.2s; flex-shrink: 0;" onclick="downloadDriveFile('${file.name}', '${cleanName}')" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'" title="Unduh File"><i class="fa-solid fa-arrow-down"></i></div></div>`;
+            }).join('');
+            document.getElementById('driveFooter').innerText = `${sortedFiles.length} Berkas`;
+        }
+    }
+    async function downloadDriveFile(fileName, cleanName) {
+        try {
+            const { data, error } = await supabaseClient.storage.from('documents').download(`uploads/${fileName}`); if (error) throw error;
+            const url = URL.createObjectURL(data); const a = document.createElement('a'); a.href = url; a.download = cleanName; 
+            document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+        } catch (error) { alert("Gagal: " + error.message); }
+    }
+    async function handleFileUpload(event) {
+        const file = event.target.files[0]; if (!file) return;
+        const pWrap = document.getElementById('driveProgressWrap'); const pBar = document.getElementById('driveProgressBar');
+        const sMsg = document.getElementById('driveSuccessMsg'); const uStatus = document.getElementById('uploadStatus');
+        pWrap.style.display = 'block'; sMsg.style.display = 'none'; pBar.style.width = '20%'; uStatus.innerText = 'Mengunggah file...';
+        const filePath = `uploads/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+        try {
+            pBar.style.width = '60%'; await supabaseClient.storage.from('documents').upload(filePath, file);
+            pBar.style.width = '100%'; uStatus.innerText = 'Selesai!';
+            setTimeout(() => { pWrap.style.display = 'none'; sMsg.style.display = 'block'; uStatus.innerText = 'Ketuk untuk unggah'; setTimeout(() => { sMsg.style.display = 'none'; }, 2500); loadDriveFiles(); }, 400);
+        } catch(err) { alert("Gagal mengunggah."); pWrap.style.display = 'none'; uStatus.innerText = 'Ketuk untuk unggah'; }
+    }
+
+    let h = []; const inputEl = document.getElementById("input"), otaEl = document.getElementById("ota"), netEl = document.getElementById("net"), grossEl = document.getElementById("gross"), cutEl = document.getElementById("cut"), statusEl = document.getElementById("status"), historyBoxEl = document.getElementById("historyBox");
+    function initOTAGrid() { document.getElementById("gridBox").innerHTML = [2,3,4,5,6,7,8,9].map(i => `<div class="ota-box" id="d${i}">÷${i}<br><b>0</b></div>`).join(''); }
+    function r(x){ return "Rp " + Math.round(x).toLocaleString("id-ID"); } function n(x){ return Math.round(x).toLocaleString("id-ID"); } function c(v){ return parseFloat((v||"").replace(/[^0-9]/g,''))||0; }
+    function calcOTA(){
+        let val = c(inputEl.value), o = otaEl.value; if(val > 0) inputEl.value = val.toLocaleString("id-ID");
+        if(!val){ netEl.innerHTML="Rp 0"; grossEl.innerHTML="Rp 0"; cutEl.innerHTML="Rp 0"; for(let i=2; i<=9; i++) document.getElementById("d"+i).innerHTML = "÷"+i+"<br><b>0</b>"; return null; }
+        let netV = (o=="traveloka") ? (val/0.82)*0.75 : val*0.88, grossV = (o=="traveloka") ? val/0.82 : val;
+        netEl.innerHTML = r(netV); grossEl.innerHTML = r(grossV); cutEl.innerHTML = r(grossV - netV);
+        for(let i=2; i<=9; i++) document.getElementById("d"+i).innerHTML = "÷"+i+"<br><b>"+n(netV/i)+"</b>";
+        statusEl.innerHTML = "🟡 Belum disimpan"; statusEl.className = "ota-status ota-yellow"; return { netVal: netV, inputVal: val, ota: o };
+    }
+    function submitOTA(){
+        let res = calcOTA(); if(!res && inputEl.dataset.lastVal) res = JSON.parse(inputEl.dataset.lastVal);
+        if(res){
+            h.push(res); h.sort((a, b) => a.netVal - b.netVal);
+            historyBoxEl.innerHTML = h.map(x => {
+                let splitValues = [2, 3, 4, 5, 6].map(div => "<span>÷" + div + ":" + n(x.netVal / div) + "</span>").join(" • ");
+                return "<div class='ota-hist-item'><div class='ota-hist-main'>" + n(x.inputVal) + " -> " + n(x.netVal) + " [ " + x.ota.toUpperCase() + " ]</div><div class='ota-hist-split'>" + splitValues + "</div></div>";
+            }).join("");
+            let currentNet = netEl.innerHTML, currentGross = grossEl.innerHTML, currentCut = cutEl.innerHTML;
+            inputEl.value = ""; netEl.innerHTML = currentNet; grossEl.innerHTML = currentGross; cutEl.innerHTML = currentCut;
+            statusEl.innerHTML = "🟢 Tersimpan"; statusEl.className = "ota-status ota-green";
+        }
+    }
+    inputEl.addEventListener('input', () => { let val = c(inputEl.value), o = otaEl.value; if(val > 0) inputEl.dataset.lastVal = JSON.stringify({ netVal: (o=="traveloka") ? (val/0.82)*0.75 : val*0.88, inputVal: val, ota: o }); });
+    inputEl.oninput = calcOTA; otaEl.onchange = calcOTA;
+
+    function updateTextCharCount() { document.getElementById('textConverterFooter').innerText = `${document.getElementById('textConverterInput').value.length} Karakter`; }
+    function resetTextButtonState() {
+        updateTextCharCount();
+        if (isTextConverterSubmitted) {
+            isTextConverterSubmitted = false; document.getElementById('textActionBtn').className = "btn-teks blue-mode";
+            document.getElementById('textBtnIcon').className = "fa-regular fa-copy"; document.getElementById('textBtnText').innerText = "KAPITAL & SALIN";
+            document.getElementById('textStatusIndicator').style.display = 'none';
+        }
+    }
+    async function handleTextButtonClick() {
+        const inputArea = document.getElementById('textConverterInput'), btn = document.getElementById('textActionBtn'), icon = document.getElementById('textBtnIcon'), text = document.getElementById('textBtnText');
+        if (!isTextConverterSubmitted) {
+            const originalText = inputArea.value.trim(); if (!originalText) return;
+            const uppercaseText = originalText.toUpperCase(); inputArea.value = uppercaseText; updateTextCharCount();
+            try { await navigator.clipboard.writeText(uppercaseText); document.getElementById('textStatusIndicator').style.display = 'block'; isTextConverterSubmitted = true; btn.className = "btn-teks red-mode"; icon.className = "fa-solid fa-trash-can"; text.innerText = "HAPUS TEKS"; } catch (err) { alert("Gagal menyalin."); }
+        } else {
+            inputArea.value = ""; updateTextCharCount(); isTextConverterSubmitted = false; btn.className = "btn-teks blue-mode"; icon.className = "fa-regular fa-copy"; text.innerText = "KAPITAL & SALIN"; document.getElementById('textStatusIndicator').style.display = 'none';
+        }
+    }
+
+    // =======================================================
+    // --- INTEGRASI FUNGSI EMAIL ---
+    // =======================================================
+    let emailsData = [];
+    let activeEmail = null; 
+
+    function cleanSenderName(senderText) {
+      if (!senderText) return 'Anonim';
+      const match = senderText.match(/^([^<]+)/);
+      return match ? match[1].trim() : senderText;
+    }
+
+    async function loadEmails() {
+      const container = document.getElementById('emailListContainer');
+      const footer = document.getElementById('emailFooter');
+      container.innerHTML = `<div class="item-meta" style="text-align: center; padding: 20px 0;">Memuat pesan...</div>`;
+      
+      try {
+        const { data, error } = await supabaseClient
+          .from('emails')
+          .select('*')
+          .neq('sender', 'Google <no-reply@accounts.google.com>') 
+          .order('email_id', { ascending: false }); 
+
+        if (error) {
+          container.innerHTML = `<div class="item-meta" style="text-align: center; padding: 20px 0;">Error: ${error.message}</div>`;
+          return;
+        }
+
+        if (!data || data.length === 0) {
+          container.innerHTML = `<div class="item-meta" style="text-align: center; padding: 20px 0;">Belum ada email baru.</div>`;
+          footer.innerText = `0 Email`;
+          return;
+        }
+
+        emailsData = data;
+
+        container.innerHTML = data.map((email, index) => {
+            const subjectText = escapeHTML(email.subject || 'Tanpa Subjek');
+            const senderText = escapeHTML(cleanSenderName(email.sender));
+            const snippetText = escapeHTML(email.body || 'Tidak ada isi').substring(0, 45) + '...';
+
+            return `
+            <div class="item-row" onclick="openEmailMessage(${index})">
+                <div class="item-text-wrapper">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 8px;">
+                        <div class="item-title">${subjectText}</div>
+                        <div class="item-meta" style="margin-top:0;">${senderText}</div>
+                    </div>
+                    <div class="item-meta" style="margin-top: 4px;">${snippetText}</div>
+                </div>
+            </div>`;
+        }).join('');
+        
+        footer.innerText = `${data.length} Email`;
+
+      } catch (err) {
+        console.error(err);
+        container.innerHTML = `<div class="item-meta" style="text-align: center; padding: 20px 0;">Terjadi kesalahan sistem.</div>`;
+      }
+    }
+
+    function openEmailMessage(index) {
+      activeEmail = emailsData[index];
+      if (!activeEmail) return;
+
+      document.getElementById('modalEmailSubject').innerHTML = '<i class="fa-regular fa-envelope" style="color:#f5b031; margin-right:8px;"></i> ' + escapeHTML(activeEmail.subject || 'Tanpa Subjek');
+      document.getElementById('modalEmailSender').innerHTML = 'Dari: <span style="color:var(--text-primary);">' + escapeHTML(activeEmail.sender || 'Anonim') + '</span>';
+      document.getElementById('modalEmailContent').innerHTML = escapeHTML(activeEmail.body || 'Tidak ada isi pesan yang bisa ditampilkan.');
+
+      document.getElementById('copyEmailBtn').innerHTML = '<i class="fa-regular fa-copy"></i> Salin';
+      document.getElementById('emailModal').style.display = 'flex';
+    }
+
+    function closeEmailModal() {
+      document.getElementById('emailModal').style.display = 'none';
+      activeEmail = null;
+    }
+
+    async function copyEmailMessage() {
+      if (!activeEmail) return;
+      const textToCopy = activeEmail.body || 'Tidak ada isi';
+      
+      try {
+        await navigator.clipboard.writeText(textToCopy);
+        const copyBtn = document.getElementById('copyEmailBtn');
+        copyBtn.innerHTML = '<i class="fa-solid fa-check"></i> Tersalin!';
+        
+        setTimeout(() => {
+          if (copyBtn.innerText.includes('Tersalin')) {
+            copyBtn.innerHTML = '<i class="fa-regular fa-copy"></i> Salin';
+          }
+        }, 2000);
+      } catch (err) {
+        console.error('Gagal menyalin:', err);
+      }
+    }
+
+    // Pasang loadEmails bersamaan saat DOM dimuat agar sinkron dengan yang lain
+    window.addEventListener('DOMContentLoaded', loadEmails);
+
+</script>
+
+</body>
+</html>
