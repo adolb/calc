@@ -54,25 +54,30 @@
     /* MODE LANDSCAPE (HALAMAN FIX TANPA SCROLL, HISTORY SEJAJAR) */
     body.landscape-mode {
         height: 100vh;
-        overflow: hidden; /* Mencegah seluruh halaman HTML meluncur/di-scroll */
+        overflow: hidden; 
     }
 
     body.landscape-mode .container { 
         flex-direction: row; 
         max-width: 1100px; 
-        height: calc(100vh - 40px - env(safe-area-inset-top)); /* Tinggi sejajar layar */
+        height: calc(100vh - 40px - env(safe-area-inset-top)); 
         align-items: stretch; 
     }
 
     body.landscape-mode .left-panel { 
         flex: 1.2; 
-        overflow-y: auto; /* Antisipasi jika layar HP sangat pendek */
+        overflow-y: auto; 
+        -ms-overflow-style: none;  
+        scrollbar-width: none;  
+    }
+    body.landscape-mode .left-panel::-webkit-scrollbar { 
+        display: none; 
     }
 
     body.landscape-mode .right-panel { 
         flex: 1; 
-        height: 100%; /* Mengikuti tinggi panel kiri/kalkulator */
-        overflow: hidden; /* Panel tetap diam */
+        height: 100%; 
+        overflow: hidden; 
     }
 
     h1{font-size:30px;}
@@ -99,25 +104,22 @@
     .clear-btn { background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; }
     .clear-btn:active { background: #dc2626; }
     
-    /* AREA HISTORY SCROLL KHUSUS */
     .history {
         font-size:15px; 
         color:#cbd5e1;
         overflow-y: auto;
-        max-height: 400px; /* Batas tinggi pada mode portrait */
+        max-height: 400px; 
         padding-right: 6px;
         scrollbar-width: thin;
         scrollbar-color: #475569 transparent;
     }
     
-    /* Pada Landscape, area isi history otomatis menyesuaikan sisa tinggi panel */
     body.landscape-mode .history {
         max-height: none;
         flex: 1;
         min-height: 0;
     }
 
-    /* Kustomisasi Tampilan Bar Scroll Internal */
     .history::-webkit-scrollbar { width: 6px; }
     .history::-webkit-scrollbar-track { background: transparent; }
     .history::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
@@ -128,32 +130,13 @@
     .hist-split{font-size:13px; color:#94a3b8; margin-top:6px; font-family:monospace; line-height: 1.5; display: flex; flex-wrap: wrap; gap: 8px;}
 
     /* --- TEMA SIANG (LIGHT MODE) --- */
-    body.light-mode {
-        background: #f1f5f9;
-        color: #0f172a;
-    }
-    body.light-mode .left-panel,
-    body.light-mode .right-panel {
-        background: #ffffff;
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
-    }
+    body.light-mode { background: #f1f5f9; color: #0f172a; }
+    body.light-mode .left-panel, body.light-mode .right-panel { background: #ffffff; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05); }
     body.light-mode .sub { color: #64748b; }
-    body.light-mode select,
-    body.light-mode input {
-        background: #e2e8f0;
-        color: #0f172a;
-    }
-    body.light-mode .layout-btn {
-        background: #e2e8f0;
-        color: #334155;
-        border-color: #cbd5e1;
-    }
+    body.light-mode select, body.light-mode input { background: #e2e8f0; color: #0f172a; }
+    body.light-mode .layout-btn { background: #e2e8f0; color: #334155; border-color: #cbd5e1; }
     body.light-mode .layout-btn:active { background: #cbd5e1; }
-    body.light-mode .box {
-        background: #f8fafc;
-        color: #0f172a;
-        border: 1px solid #e2e8f0;
-    }
+    body.light-mode .box { background: #f8fafc; color: #0f172a; border: 1px solid #e2e8f0; }
     body.light-mode .history-header { border-bottom-color: #e2e8f0; }
     body.light-mode .history { color: #334155; }
     body.light-mode .hist-item { border-bottom-color: #e2e8f0; }
@@ -190,10 +173,13 @@
         <div class="result">
             <div class="resultTitle">Room Revenue (Net)</div>
             <div id="net" class="big">Rp 0</div>
-            <div class="subinfo">
-                <span id="grossLabel">Harga Voucher</span>: <span id="gross">Rp 0</span><br>
-                Potongan OTA: <span id="cut">Rp 0</span>
+            
+            <!-- Area ini yang dirombak agar bisa dinamis menampilkan 3 baris informasi -->
+            <div class="subinfo" id="subinfo">
+                Harga Voucher: Rp 0<br>
+                Potongan OTA: Rp 0
             </div>
+            
         </div>
 
         <div class="row" id="gridBox"></div>
@@ -217,9 +203,7 @@
     const inputEl = document.getElementById("input");
     const otaEl = document.getElementById("ota");
     const netEl = document.getElementById("net");
-    const grossEl = document.getElementById("gross");
-    const grossLabelEl = document.getElementById("grossLabel");
-    const cutEl = document.getElementById("cut");
+    const subinfoEl = document.getElementById("subinfo");
     const statusEl = document.getElementById("status");
     const historyBoxEl = document.getElementById("historyBox");
     const layoutBtn = document.getElementById("layoutBtn");
@@ -286,11 +270,10 @@
         let val = c(raw);
         let o = otaEl.value;
         
-        grossLabelEl.innerHTML = (o === "traveloka_baru") ? "Harga Tamu (Gross)" : "Harga Voucher";
-
         if(val > 0) inputEl.value = val.toLocaleString("id-ID");
         if(!val){
-            netEl.innerHTML="Rp 0"; grossEl.innerHTML="Rp 0"; cutEl.innerHTML="Rp 0";
+            netEl.innerHTML="Rp 0"; 
+            subinfoEl.innerHTML="Harga Voucher: Rp 0<br>Potongan OTA: Rp 0";
             for(let i=2; i<=9; i++) {
                 document.getElementById("d"+i).innerHTML = "÷"+i+"<br><b>0</b>";
             }
@@ -300,8 +283,18 @@
         let { netV, grossV } = getNetAndGross(val, o);
         
         netEl.innerHTML = r(netV);
-        grossEl.innerHTML = r(grossV);
-        cutEl.innerHTML = r(grossV - netV);
+        
+        // Logika Tampilan Teks Khusus Traveloka Baru vs Lainnya
+        if (o === "traveloka_baru") {
+            subinfoEl.innerHTML = 
+                "Harga Tamu (Gross): " + r(grossV) + "<br>" +
+                "Harga Voucher (Input): " + r(val) + "<br>" +
+                "Potongan OTA: " + r(grossV - netV);
+        } else {
+            subinfoEl.innerHTML = 
+                "Harga Voucher: " + r(val) + "<br>" +
+                "Potongan OTA: " + r(val - netV); // OTA Lama dan MyHorison
+        }
         
         for(let i=2; i<=9; i++) {
             document.getElementById("d"+i).innerHTML = "÷"+i+"<br><b>"+n(netV/i)+"</b>";
@@ -328,15 +321,15 @@
             
             renderHistory();
             
+            // Simpan kondisi UI (HTML) kotak hasil sebelum menghapus form input
             let currentNet = netEl.innerHTML;
-            let currentGross = grossEl.innerHTML;
-            let currentCut = cutEl.innerHTML;
+            let currentSubinfo = subinfoEl.innerHTML;
             
             inputEl.value = ""; 
             
+            // Pasang lagi tampilan kotak hijau sesuai data terakhir yang di-submit
             netEl.innerHTML = currentNet;
-            grossEl.innerHTML = currentGross;
-            cutEl.innerHTML = currentCut;
+            subinfoEl.innerHTML = currentSubinfo;
             
             statusEl.innerHTML = "🟢 Tersimpan ke History";
             statusEl.className = "status green";
