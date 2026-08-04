@@ -14,25 +14,35 @@
 <style>
     *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,sans-serif;}
     
-    /* Mendukung area notch/safe area di iPhone saat fullscreen */
+    /* --- TEMA MALAM (DEFAULT) --- */
     body{
         background:#0f172a;
         padding: calc(20px + env(safe-area-inset-top)) 20px 20px 20px;
         color:white;
-        transition: all 0.3s ease;
+        transition: background 0.3s ease, color 0.3s ease;
     }
     
-    /* Header & Tombol Switch Layout */
     .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-    .layout-btn { background: #334155; color: #cbd5e1; border: 1px solid #475569; padding: 8px 16px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; }
+    .btn-group { display: flex; gap: 8px; }
+    
+    .layout-btn { 
+        background: #334155; 
+        color: #cbd5e1; 
+        border: 1px solid #475569; 
+        padding: 8px 14px; 
+        border-radius: 10px; 
+        font-size: 14px; 
+        font-weight: 600; 
+        cursor: pointer; 
+        transition: all 0.2s ease;
+    }
     .layout-btn:active { background: #475569; }
 
-    /* --- MODE DEFAULT: PORTRAIT --- */
+    /* MODE PORTRAIT & LANDSCAPE */
     .container { display: flex; flex-direction: column; gap: 20px; max-width: 520px; margin: auto; }
-    .left-panel { background:#1e293b; border-radius:20px; padding:24px; width: 100%; }
-    .right-panel { background:#1e293b; border-radius:20px; padding:24px; width: 100%; }
+    .left-panel { background:#1e293b; border-radius:20px; padding:24px; width: 100%; transition: background 0.3s ease; }
+    .right-panel { background:#1e293b; border-radius:20px; padding:24px; width: 100%; transition: background 0.3s ease; }
     
-    /* --- MODE TOGGLE: LANDSCAPE --- */
     body.landscape-mode .container { flex-direction: row; max-width: 1100px; align-items: flex-start; }
     body.landscape-mode .left-panel { flex: 1.2; }
     body.landscape-mode .right-panel { flex: 1; align-self: stretch; }
@@ -40,30 +50,62 @@
     h1{font-size:30px;}
     .sub{color:#94a3b8;margin-bottom:16px;font-size:16px;}
     label{display:block;margin-top:14px;margin-bottom:8px;font-weight:600;font-size:18px;}
-    select,input{width:100%;padding:14px;font-size:18px;border:none;border-radius:12px;background:#334155;color:white;outline:none;}
+    select,input{width:100%;padding:14px;font-size:18px;border:none;border-radius:12px;background:#334155;color:white;outline:none;transition: all 0.3s ease;}
     .input-row{display:flex;gap:10px;align-items:center;}
     input{flex:1;}
-    button{padding:14px 20px;border:none;border-radius:12px;color:white;font-weight: 600;font-size:18px;cursor:pointer;background:#16a34a;white-space:nowrap;}
+    button.submit-btn{padding:14px 20px;border:none;border-radius:12px;color:white;font-weight: 600;font-size:18px;cursor:pointer;background:#16a34a;white-space:nowrap;}
     .status{margin-top:14px;font-size:14px;padding:8px 14px;border-radius:10px;display:inline-block;font-weight: 500;}
     .yellow{background:#f59e0b;color:#111;}.green{background:#22c55e;color:#111;}
     
-    /* Layout Output (Bubble Hijau) */
     .result{margin-top:16px;background:#16a34a;padding:24px;border-radius:18px;text-align:center;color:white;}
     .resultTitle{font-size:18px; margin-bottom: 6px; opacity: 0.9;}
     .big{font-size:44px; font-weight:bold; margin-bottom: 12px;}
     .subinfo{font-size:16px; font-weight: 500; line-height: 1.5;}
 
-    /* Grid Pembagian sampai ÷9 */
     .row{display:grid;grid-template-columns:repeat(4, 1fr);gap:10px;margin-top:16px;}
-    .box{background:#0f172a;padding:12px 8px;border-radius:10px;text-align:center;font-size:14px;line-height: 1.4;}
+    .box{background:#0f172a;padding:12px 8px;border-radius:10px;text-align:center;font-size:14px;line-height: 1.4;transition: background 0.3s ease;}
     .box b {font-size: 15px; display: inline-block; margin-top: 2px;}
     
-    /* Gaya Area History */
-    .history-title { font-size: 22px; font-weight: bold; margin-bottom: 16px; border-bottom: 2px solid #334155; padding-bottom: 8px; }
+    .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 2px solid #334155; padding-bottom: 8px; }
+    .history-title { font-size: 22px; font-weight: bold; }
+    .clear-btn { background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; }
+    .clear-btn:active { background: #dc2626; }
     .history{font-size:15px; color:#cbd5e1;}
     .hist-item{margin-bottom:12px; border-bottom:1px solid #334155; padding-bottom:10px;}
     .hist-main{font-family:monospace; font-weight: bold; font-size: 16px;}
     .hist-split{font-size:13px; color:#94a3b8; margin-top:6px; font-family:monospace; line-height: 1.5; display: flex; flex-wrap: wrap; gap: 8px;}
+
+    /* --- TEMA SIANG (LIGHT MODE) --- */
+    body.light-mode {
+        background: #f1f5f9;
+        color: #0f172a;
+    }
+    body.light-mode .left-panel,
+    body.light-mode .right-panel {
+        background: #ffffff;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+    }
+    body.light-mode .sub { color: #64748b; }
+    body.light-mode select,
+    body.light-mode input {
+        background: #e2e8f0;
+        color: #0f172a;
+    }
+    body.light-mode .layout-btn {
+        background: #e2e8f0;
+        color: #334155;
+        border-color: #cbd5e1;
+    }
+    body.light-mode .layout-btn:active { background: #cbd5e1; }
+    body.light-mode .box {
+        background: #f8fafc;
+        color: #0f172a;
+        border: 1px solid #e2e8f0;
+    }
+    body.light-mode .history-header { border-bottom-color: #e2e8f0; }
+    body.light-mode .history { color: #334155; }
+    body.light-mode .hist-item { border-bottom-color: #e2e8f0; }
+    body.light-mode .hist-split { color: #64748b; }
 </style>
 </head>
 <body>
@@ -72,17 +114,24 @@
     <div class="left-panel">
         <div class="header-row">
             <h1>OTA Calculator</h1>
-            <button class="layout-btn" onclick="toggleLayout()" id="layoutBtn">Portrait</button>
+            <div class="btn-group">
+                <button class="layout-btn" onclick="toggleTheme()" id="themeBtn">Malam</button>
+                <button class="layout-btn" onclick="toggleLayout()" id="layoutBtn">Portrait</button>
+            </div>
         </div>
         <div class="sub">Traveloka / My Horison</div>
         
         <label>OTA</label>
-        <select id="ota"><option value="traveloka">Traveloka</option><option value="my">My Horison</option></select>
+        <select id="ota">
+            <option value="traveloka_lama" selected>Traveloka Lama</option>
+            <option value="traveloka_baru">Traveloka Baru</option>
+            <option value="my">My Horison</option>
+        </select>
         
         <label>Voucher</label>
         <div class="input-row">
-            <input id="input" type="tel" inputmode="numeric" placeholder="Masukkan harga...">
-            <button onclick="submit()">Submit</button>
+            <input id="input" type="tel" inputmode="numeric" placeholder="Masukkan harga..." onkeydown="if(event.key==='Enter') submit()">
+            <button class="submit-btn" onclick="submit()">Submit</button>
         </div>
         <div id="status" class="status yellow">🟡 Belum disimpan</div>
         
@@ -90,7 +139,7 @@
             <div class="resultTitle">Room Revenue (Net)</div>
             <div id="net" class="big">Rp 0</div>
             <div class="subinfo">
-                Harga Tamu (Gross): <span id="gross">Rp 0</span><br>
+                <span id="grossLabel">Harga Voucher</span>: <span id="gross">Rp 0</span><br>
                 Potongan OTA: <span id="cut">Rp 0</span>
             </div>
         </div>
@@ -99,7 +148,10 @@
     </div>
 
     <div class="right-panel">
-        <div class="history-title">History</div>
+        <div class="history-header">
+            <div class="history-title">History</div>
+            <button class="clear-btn" onclick="clearHistory()">Hapus History</button>
+        </div>
         <div class="history" id="historyBox">Belum ada history</div>
     </div>
 </div>
@@ -108,35 +160,82 @@
     const gridBox = document.getElementById("gridBox");
     gridBox.innerHTML = [2,3,4,5,6,7,8,9].map(i => `<div class="box" id="d${i}">÷${i}<br><b>0</b></div>`).join('');
 
-    let h = [];
+    let h = JSON.parse(localStorage.getItem("ota_history") || "[]");
     
     const inputEl = document.getElementById("input");
     const otaEl = document.getElementById("ota");
     const netEl = document.getElementById("net");
     const grossEl = document.getElementById("gross");
+    const grossLabelEl = document.getElementById("grossLabel");
     const cutEl = document.getElementById("cut");
     const statusEl = document.getElementById("status");
     const historyBoxEl = document.getElementById("historyBox");
     const layoutBtn = document.getElementById("layoutBtn");
+    const themeBtn = document.getElementById("themeBtn");
 
     function toggleLayout() {
         document.body.classList.toggle("landscape-mode");
-        if(document.body.classList.contains("landscape-mode")) {
-            layoutBtn.innerHTML = "Landscape";
-        } else {
-            layoutBtn.innerHTML = "Portrait";
-        }
+        layoutBtn.innerHTML = document.body.classList.contains("landscape-mode") ? "Landscape" : "Portrait";
+    }
+
+    function toggleTheme() {
+        document.body.classList.toggle("light-mode");
+        const isLight = document.body.classList.contains("light-mode");
+        themeBtn.innerHTML = isLight ? "Siang" : "Malam";
+        localStorage.setItem("ota_theme", isLight ? "light" : "dark");
     }
 
     function r(x){ return "Rp " + Math.round(x).toLocaleString("id-ID"); }
     function n(x){ return Math.round(x).toLocaleString("id-ID"); }
     function c(v){ return parseFloat((v||"").replace(/[^0-9]/g,''))||0; }
 
+    function formatOtaName(otaKey) {
+        if(otaKey === "traveloka_lama") return "TRV LAMA";
+        if(otaKey === "traveloka_baru") return "TRV BARU";
+        if(otaKey === "my") return "MYHO";
+        return otaKey.toUpperCase();
+    }
+
+    function getNetAndGross(val, o) {
+        let netV = 0, grossV = 0;
+        if (o === "traveloka_lama") {
+            let cutV = Math.trunc(val * 0.084337);
+            netV = val - cutV;
+            grossV = val;
+        } else if (o === "traveloka_baru") {
+            grossV = val / 0.82;
+            netV = grossV * 0.75;
+        } else if (o === "my") {
+            grossV = val;
+            netV = val * 0.88;
+        }
+        return { netV, grossV };
+    }
+
+    function renderHistory() {
+        if (h.length === 0) {
+            historyBoxEl.innerHTML = "Belum ada history";
+            return;
+        }
+        historyBoxEl.innerHTML = h.map(x => {
+            let splitValues = [2, 3, 4, 5, 6]
+                .map(div => "<span>÷" + div + ":" + n(x.netVal / div) + "</span>")
+                .join("");
+            
+            return "<div class='hist-item'>" +
+                "<div class='hist-main'>" + n(x.inputVal) + " -> " + n(x.netVal) + " • " + formatOtaName(x.ota) + "</div>" +
+                "<div class='hist-split'>" + splitValues + "</div>" +
+            "</div>";
+        }).join("");
+    }
+
     function calc(){
         let raw = inputEl.value;
         let val = c(raw);
         let o = otaEl.value;
         
+        grossLabelEl.innerHTML = (o === "traveloka_baru") ? "Harga Tamu (Gross)" : "Harga Voucher";
+
         if(val > 0) inputEl.value = val.toLocaleString("id-ID");
         if(!val){
             netEl.innerHTML="Rp 0"; grossEl.innerHTML="Rp 0"; cutEl.innerHTML="Rp 0";
@@ -146,8 +245,7 @@
             return null;
         }
         
-        let netV = (o=="traveloka") ? (val/0.82)*0.75 : val*0.88;
-        let grossV = (o=="traveloka") ? val/0.82 : val;
+        let { netV, grossV } = getNetAndGross(val, o);
         
         netEl.innerHTML = r(netV);
         grossEl.innerHTML = r(grossV);
@@ -159,7 +257,10 @@
         
         statusEl.innerHTML = "🟡 Belum disimpan";
         statusEl.className = "status yellow";
-        return { netVal: netV, inputVal: val, ota: o };
+
+        let resultObj = { netVal: netV, inputVal: val, ota: o };
+        inputEl.dataset.lastVal = JSON.stringify(resultObj);
+        return resultObj;
     }
 
     function submit(){
@@ -171,17 +272,9 @@
         if(res){
             h.push(res);
             h.sort((a, b) => a.netVal - b.netVal);
+            localStorage.setItem("ota_history", JSON.stringify(h));
             
-            historyBoxEl.innerHTML = h.map(x => {
-                let splitValues = [2, 3, 4, 5, 6]
-                    .map(div => "<span>÷" + div + ":" + n(x.netVal / div) + "</span>")
-                    .join("");
-                
-                return "<div class='hist-item'>" +
-                    "<div class='hist-main'>" + n(x.inputVal) + " -> " + n(x.netVal) + " • " + x.ota.toUpperCase() + "</div>" +
-                    "<div class='hist-split'>" + splitValues + "</div>" +
-                "</div>";
-            }).join("");
+            renderHistory();
             
             let currentNet = netEl.innerHTML;
             let currentGross = grossEl.innerHTML;
@@ -197,19 +290,25 @@
             statusEl.className = "status green";
         }
     }
-    
-    inputEl.addEventListener('input', () => {
-        let val = c(inputEl.value);
-        let o = otaEl.value;
-        if(val > 0) {
-            let netV = (o=="traveloka") ? (val/0.82)*0.75 : val*0.88;
-            inputEl.dataset.lastVal = JSON.stringify({ netVal: netV, inputVal: val, ota: o });
+
+    function clearHistory() {
+        if(confirm("Apakah Anda yakin ingin menghapus semua history?")) {
+            h = [];
+            localStorage.removeItem("ota_history");
+            renderHistory();
         }
-    });
+    }
     
     inputEl.oninput = calc;
     otaEl.onchange = calc;
+
+    if (localStorage.getItem("ota_theme") === "light") {
+        document.body.classList.add("light-mode");
+        themeBtn.innerHTML = "Siang";
+    }
+
+    renderHistory();
+    calc(); 
 </script>
 </body>
 </html>
-
